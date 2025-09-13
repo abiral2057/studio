@@ -3,7 +3,7 @@
 
 import { cookies } from 'next/headers';
 import type { User } from './types';
-import { getUser as getUserFromDb } from './data';
+import { getUser as getUserFromDb, updateUserPassword } from './data';
 import { encrypt, decrypt } from './session';
 
 export async function login({ username, password }: { username: string, password: string }) {
@@ -54,14 +54,12 @@ export async function changePassword({ currentPassword, newPassword }: { current
     return { success: false, error: "Current password does not match." };
   }
   
-  // In a real app, you would update the hashed password in the database.
-  // For this demo, we can't really "change" the hardcoded password in db.json easily.
-  // We'll simulate success and log the user out.
+  const updated = updateUserPassword(newPassword);
+
+  if (updated) {
+    await logout();
+    return { success: true };
+  }
   
-  console.log("Password change requested. New password would be:", newPassword, ". This is a simulation.");
-  
-  // Since we changed the password, we should log the user out for security.
-  await logout();
-  
-  return { success: true };
+  return { success: false, error: 'Failed to update password.' };
 }

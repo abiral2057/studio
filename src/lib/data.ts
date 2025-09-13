@@ -245,4 +245,14 @@ export const getTransactionsByCustomerId = (customerId: string): Transaction[] =
 export const getUser = (): UserWithPassword | null => {
   const db = readDb();
   return db.user || null;
-}
+};
+
+export const updateUserPassword = (password: string) => {
+  const db = readDb();
+  if (db.user) {
+    db.user.passwordHash = password;
+    writeDb(db);
+    return true;
+  }
+  return false;
+};
