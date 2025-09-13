@@ -37,15 +37,46 @@ const NepaliCalendar = ({ date, onDateSelect }: { date: NepaliDate, onDateSelect
   const [displayDate, setDisplayDate] = useState(date);
 
   const monthData = useMemo(() => {
-    return displayDate.getMonthData();
+    const year = displayDate.getYear();
+    const month = displayDate.getMonth();
+    const monthDetails = NepaliDate.getMonthDays(year, month);
+    const firstDayOfWeek = new NepaliDate(year, month, 1).getDay();
+    
+    const days = [];
+    // Add padding for days from previous month
+    for (let i = 0; i < firstDayOfWeek; i++) {
+        days.push({ day: null, isCurrentMonth: false });
+    }
+
+    // Add days of the current month
+    for (let i = 1; i <= monthDetails; i++) {
+      days.push({ day: i, isCurrentMonth: true, year, month });
+    }
+    
+    return {
+        weekDays: NepaliDate.weekDays,
+        days: days,
+    };
   }, [displayDate]);
 
   const handlePrevMonth = () => {
-    setDisplayDate(new NepaliDate(displayDate.getYear(), displayDate.getMonth() - 1, 1));
+    let newYear = displayDate.getYear();
+    let newMonth = displayDate.getMonth() - 1;
+    if (newMonth < 0) {
+      newMonth = 11;
+      newYear -= 1;
+    }
+    setDisplayDate(new NepaliDate(newYear, newMonth, 1));
   };
 
   const handleNextMonth = () => {
-    setDisplayDate(new NepaliDate(displayDate.getYear(), displayDate.getMonth() + 1, 1));
+    let newYear = displayDate.getYear();
+    let newMonth = displayDate.getMonth() + 1;
+    if (newMonth > 11) {
+      newMonth = 0;
+      newYear += 1;
+    }
+    setDisplayDate(new NepaliDate(newYear, newMonth, 1));
   };
   
   const handleYearChange = (yearStr: string) => {
@@ -99,13 +130,13 @@ const NepaliCalendar = ({ date, onDateSelect }: { date: NepaliDate, onDateSelect
         {monthData.days.map((day, i) => (
            <Button
             key={i}
-            variant={day.isCurrentMonth ? "ghost" : "ghost"}
+            variant="ghost"
             size="icon"
-            onClick={() => day.isCurrentMonth && onDateSelect(new NepaliDate(day.year, day.month, day.day))}
+            onClick={() => day.isCurrentMonth && onDateSelect(new NepaliDate(day.year!, day.month!, day.day!))}
             className={cn(
                 "h-9 w-9 p-0 font-normal",
-                !day.isCurrentMonth && "text-muted-foreground opacity-50",
-                date.getYear() === day.year && date.getMonth() === day.month && date.getDate() === day.day && "bg-primary text-primary-foreground"
+                !day.isCurrentMonth && "text-muted-foreground opacity-50 pointer-events-none",
+                day.isCurrentMonth && date.getYear() === day.year && date.getMonth() === day.month && date.getDate() === day.day && "bg-primary text-primary-foreground"
             )}
             disabled={!day.isCurrentMonth}
           >
