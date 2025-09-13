@@ -16,7 +16,7 @@ export function Header({ title, actionButton }: HeaderProps) {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         {actionButton && (
-          <Button onClick={actionButton.onClick}>
+          <Button onClick={actionButton.onClick} size="sm">
             <Plus className="mr-2 h-4 w-4" />
             {actionButton.label}
           </Button>

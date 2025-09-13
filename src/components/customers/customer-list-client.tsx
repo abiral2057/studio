@@ -195,14 +195,14 @@ export function CustomerListClient({
                   ) : filteredCustomers.length > 0 ? (
                     filteredCustomers.map((customer) => (
                       <TableRow key={customer.id}>
-                        <TableCell>
+                        <TableCell className="pr-2">
                           <Link href={`/customers/${customer.id}`}>
                             <div className="flex items-center gap-3 hover:underline">
                               <Avatar>
                                 <AvatarFallback>{getInitials(customer.name)}</AvatarFallback>
                               </Avatar>
                               <div>
-                                <div className="font-medium truncate max-w-[150px] sm:max-w-none">{customer.name}</div>
+                                <div className="font-medium truncate max-w-[120px] sm:max-w-none">{customer.name}</div>
                                 <div className="text-sm text-muted-foreground">
                                   {customer.customerId}
                                 </div>
@@ -210,13 +210,13 @@ export function CustomerListClient({
                             </div>
                           </Link>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell">{customer.phone}</TableCell>
-                        <TableCell className="text-right font-mono">
+                        <TableCell className="hidden md:table-cell px-2">{customer.phone}</TableCell>
+                        <TableCell className="text-right font-mono px-2">
                           <span className={customer.outstandingBalance > 0 ? 'text-destructive' : 'text-green-600'}>
                             {formatCurrency(customer.outstandingBalance)}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right pl-2">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" disabled={isPending}>

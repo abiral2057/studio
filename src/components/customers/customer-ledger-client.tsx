@@ -159,7 +159,7 @@ export function CustomerLedgerClient({
               {customer.customerId}
             </p>
           </div>
-          <div className="w-10">
+          <div className="w-10 flex-shrink-0">
             {/* Placeholder for alignment */}
           </div>
         </div>
@@ -223,20 +223,20 @@ export function CustomerLedgerClient({
                   ) : transactions.length > 0 ? (
                     transactions.map((tx) => (
                       <TableRow key={tx.id}>
-                        <TableCell>
+                        <TableCell className="pr-2">
                            <div className="font-medium truncate max-w-[150px] sm:max-w-xs">{tx.description}</div>
                            <div className="text-sm text-muted-foreground">{formatDate(tx.date)}</div>
                            {isOverdue(tx) && <Badge variant="destructive" className="mt-1">Overdue</Badge>}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right px-2">
                            <div className={`font-mono font-semibold ${tx.type === 'sale' ? 'text-destructive' : 'text-green-600'}`}>
                             {formatCurrency(tx.amount)}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-mono hidden md:table-cell">
+                        <TableCell className="text-right font-mono hidden md:table-cell px-2">
                           {formatCurrency(tx.balanceAfter)}
                         </TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="text-right pl-2">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" disabled={isPending}>
