@@ -1,14 +1,13 @@
-import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export const formatLedgerDate = (dateString: string) => {
   const date = new Date(dateString);
   
-  const englishDate = format(date, 'dd MMM yyyy');
-  // Return a placeholder for Nepali date for now
-  const nepaliDate = format(date, 'yyyy-MM-dd');
+  // By formatting in UTC, we ensure the date is the same on server and client.
+  const englishDate = formatInTimeZone(date, 'UTC', 'dd MMM yyyy');
 
   return {
     englishDate,
-    nepaliDate,
+    nepaliDate: '', // Removed nepali date logic
   };
 };
