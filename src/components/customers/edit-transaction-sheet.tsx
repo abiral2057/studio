@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -51,48 +51,54 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-interface AddTransactionSheetProps {
+interface EditTransactionSheetProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   customer: Customer;
-  onAddTransaction: (transactionData: Omit<Transaction, 'id' | 'balanceAfter' | 'status'>) => void;
+  transaction: Transaction;
+  onEditTransaction: (transactionData: Omit<Transaction, 'balanceAfter'>) => void;
 }
 
-export function AddTransactionSheet({
+export function EditTransactionSheet({
   isOpen,
   setIsOpen,
   customer,
-  onAddTransaction,
-}: AddTransactionSheetProps) {
+  transaction,
+  onEditTransaction,
+}: EditTransactionSheetProps) {
   const [isSuggesting, setIsSuggesting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      date: new Date(),
-      type: "sale",
-      amount: undefined,
-      description: "",
-      creditDays: customer.defaultCreditDays,
+      date: new Date(transaction.date),
+      type: transaction.type,
+      amount: transaction.amount,
+      description: transaction.description,
+      creditDays: transaction.creditDays ?? undefined,
     },
   });
 
+  useEffect(() => {
+    form.reset({
+      date: new Date(transaction.date),
+      type: transaction.type,
+      amount: transaction.amount,
+      description: transaction.description,
+      creditDays: transaction.creditDays ?? undefined,
+    });
+  }, [transaction, form]);
+
+
   const onSubmit = (values: FormValues) => {
-    onAddTransaction({
-      customerId: customer.id,
+    onEditTransaction({
+      ...transaction,
       date: values.date.toISOString(),
       type: values.type,
       amount: values.amount,
       description: values.description,
       creditDays: values.type === 'sale' ? values.creditDays || 0 : null,
-    });
-    form.reset({
-      date: new Date(),
-      type: "sale",
-      amount: undefined,
-      description: "",
-      creditDays: customer.defaultCreditDays,
     });
     setIsOpen(false);
   };
@@ -125,23 +131,12 @@ export function AddTransactionSheet({
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => {
-      if(!open) {
-        form.reset({
-          date: new Date(),
-          type: "sale",
-          amount: undefined,
-          description: "",
-          creditDays: customer.defaultCreditDays,
-        });
-      }
-      setIsOpen(open);
-    }}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent className="flex flex-col">
         <SheetHeader>
-          <SheetTitle>Add Transaction</SheetTitle>
+          <SheetTitle>Edit Transaction</SheetTitle>
           <SheetDescription>
-            Record a new sale or payment for {customer.name}.
+            Update the details for this transaction.
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
@@ -262,7 +257,7 @@ export function AddTransactionSheet({
               />
             )}
             <SheetFooter className="mt-auto pt-4">
-              <Button type="submit" className="w-full">Save Transaction</Button>
+              <Button type="submit" className="w-full">Save Changes</Button>
             </SheetFooter>
           </form>
         </Form>

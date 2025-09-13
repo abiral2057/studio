@@ -168,6 +168,25 @@ let DB = {
   ] as Transaction[],
 };
 
+const recalculateBalances = (customerId: string) => {
+  const customerTransactions = DB.transactions
+    .filter(t => t.customerId === customerId)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  let currentBalance = 0;
+  customerTransactions.forEach(tx => {
+    const amount = tx.type === 'sale' ? tx.amount : -tx.amount;
+    currentBalance += amount;
+    tx.balanceAfter = currentBalance;
+  });
+
+  const customer = DB.customers.find(c => c.id === customerId);
+  if (customer) {
+    customer.outstandingBalance = currentBalance;
+  }
+};
+
+
 // Functions to interact with the in-memory DB
 // This ensures that components always get the latest data.
 
@@ -183,7 +202,7 @@ export const getCustomerById = (id: string): Customer | undefined => {
 export const addCustomer = (customer: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>): Customer => {
   const newCustomer: Customer = {
     ...customer,
-    id: new Date().toISOString(),
+    id: `CUST-${Date.now()}`,
     outstandingBalance: 0,
     createdAt: new Date().toISOString(),
   };
@@ -191,10 +210,22 @@ export const addCustomer = (customer: Omit<Customer, 'id' | 'createdAt' | 'outst
   return JSON.parse(JSON.stringify(newCustomer));
 };
 
-export const updateCustomer = (updatedCustomer: Customer) => {
+export const updateCustomer = (updatedCustomer: Omit<Customer, 'outstandingBalance' | 'createdAt'>): Customer => {
   const index = DB.customers.findIndex(c => c.id === updatedCustomer.id);
   if (index !== -1) {
-    DB.customers[index] = JSON.parse(JSON.stringify(updatedCustomer));
+    DB.customers[index] = { ...DB.customers[index], ...updatedCustomer };
+    return JSON.parse(JSON.stringify(DB.customers[index]));
+  }
+  throw new Error("Customer not found");
+};
+
+export const deleteCustomer = (id: string): void => {
+  const index = DB.customers.findIndex(c => c.id === id);
+  if (index !== -1) {
+    DB.customers.splice(index, 1);
+    DB.transactions = DB.transactions.filter(t => t.customerId !== id);
+  } else {
+    throw new Error("Customer not found");
   }
 };
 
@@ -209,23 +240,44 @@ export const getTransactionsByCustomerId = (customerId: string): Transaction[] =
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
-export const addTransaction = (transaction: Omit<Transaction, 'id' | 'balanceAfter'>): Transaction => {
-  const customer = getCustomerById(transaction.customerId);
-  if (!customer) throw new Error("Customer not found");
-
-  const amount = transaction.type === 'sale' ? transaction.amount : -transaction.amount;
-  const newBalance = customer.outstandingBalance + amount;
-
+export const addTransaction = (transaction: Omit<Transaction, 'id' | 'balanceAfter' | 'status'>): Transaction => {
   const newTransaction: Transaction = {
     ...transaction,
     id: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-    balanceAfter: newBalance,
+    balanceAfter: 0, // Will be recalculated
     dueDate: transaction.type === 'sale' ? new Date(new Date(transaction.date).getTime() + (transaction.creditDays || 0) * 24 * 60 * 60 * 1000).toISOString() : null,
     status: transaction.type === 'payment' ? 'paid' : 'due',
   };
   
   DB.transactions.push(newTransaction);
-  updateCustomer({ ...customer, outstandingBalance: newBalance });
+  recalculateBalances(transaction.customerId);
   
-  return JSON.parse(JSON.stringify(newTransaction));
+  const finalTransaction = DB.transactions.find(t => t.id === newTransaction.id)!;
+  return JSON.parse(JSON.stringify(finalTransaction));
+}
+
+export const updateTransaction = (updatedTransaction: Omit<Transaction, 'balanceAfter'>): Transaction => {
+  const index = DB.transactions.findIndex(t => t.id === updatedTransaction.id);
+  if (index !== -1) {
+     DB.transactions[index] = {
+      ...DB.transactions[index],
+      ...updatedTransaction,
+      dueDate: updatedTransaction.type === 'sale' ? new Date(new Date(updatedTransaction.date).getTime() + (updatedTransaction.creditDays || 0) * 24 * 60 * 60 * 1000).toISOString() : null,
+     };
+     recalculateBalances(updatedTransaction.customerId);
+     const finalTransaction = DB.transactions.find(t => t.id === updatedTransaction.id)!;
+     return JSON.parse(JSON.stringify(finalTransaction));
+  }
+  throw new Error("Transaction not found");
+}
+
+export const deleteTransaction = (id: string): void => {
+  const index = DB.transactions.findIndex(t => t.id === id);
+  if (index !== -1) {
+    const customerId = DB.transactions[index].customerId;
+    DB.transactions.splice(index, 1);
+    recalculateBalances(customerId);
+  } else {
+    throw new Error("Transaction not found");
+  }
 }

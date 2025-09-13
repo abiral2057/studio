@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Tabs,
@@ -19,7 +18,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, ArrowRight } from "lucide-react";
+import { Search, ArrowRight, MoreVertical, FilePenLine, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
@@ -27,10 +26,27 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { AddCustomerSheet } from "./add-customer-sheet";
-import { addCustomer, getCustomers } from "@/lib/data";
+import { addCustomer, getCustomers, deleteCustomer } from "@/lib/data";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 interface CustomerListClientProps {
   customers: Customer[];
@@ -43,6 +59,9 @@ export function CustomerListClient({
   const [filter, setFilter] = useState("all");
   const [customers, setCustomers] = useState(initialCustomers);
   const [isAddCustomerSheetOpen, setIsAddCustomerSheetOpen] = useState(false);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const router = useRouter();
+  const { toast } = useToast();
 
   const refreshCustomers = () => {
     setCustomers(getCustomers());
@@ -53,6 +72,24 @@ export function CustomerListClient({
     refreshCustomers(); 
   };
 
+  const handleDeleteCustomer = () => {
+    if (customerToDelete) {
+      try {
+        deleteCustomer(customerToDelete.id);
+        refreshCustomers();
+        toast({ title: "Success", description: "Customer deleted." });
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete customer.",
+        });
+      } finally {
+        setCustomerToDelete(null);
+      }
+    }
+  };
+  
   const filteredCustomers = useMemo(() => {
     return customers
       .filter((customer) => {
@@ -118,7 +155,7 @@ export function CustomerListClient({
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden md:table-cell">Phone</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="text-right">View</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -126,17 +163,19 @@ export function CustomerListClient({
                   filteredCustomers.map((customer) => (
                     <TableRow key={customer.id}>
                       <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback>{getInitials(customer.name)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <div className="font-medium">{customer.name}</div>
-                            <div className="text-sm text-muted-foreground">
-                              {customer.customerId}
+                        <Link href={`/customers/${customer.id}`}>
+                          <div className="flex items-center gap-3 hover:underline">
+                            <Avatar>
+                              <AvatarFallback>{getInitials(customer.name)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <div className="font-medium">{customer.name}</div>
+                              <div className="text-sm text-muted-foreground">
+                                {customer.customerId}
+                              </div>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">{customer.phone}</TableCell>
                       <TableCell className="text-right font-mono">
@@ -145,11 +184,22 @@ export function CustomerListClient({
                         </span>
                       </TableCell>
                        <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/customers/${customer.id}`}>
-                            <ArrowRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                             <DropdownMenuItem onSelect={() => router.push(`/customers/${customer.id}`)}>
+                              <ArrowRight className="mr-2 h-4 w-4" /> View Ledger
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => setCustomerToDelete(customer)}>
+                              <Trash2 className="mr-2 h-4 w-4 text-destructive" />
+                              <span className="text-destructive">Delete Customer</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -170,6 +220,20 @@ export function CustomerListClient({
         setIsOpen={setIsAddCustomerSheetOpen}
         onAddCustomer={handleAddCustomer}
       />
+      <AlertDialog open={!!customerToDelete} onOpenChange={() => setCustomerToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the customer and all their associated transactions.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteCustomer} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -24,7 +24,6 @@ import {
   ArrowLeft,
   FilePenLine,
   Plus,
-  Receipt,
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
@@ -36,7 +35,19 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
-import { addTransaction, getCustomerById, getTransactionsByCustomerId } from "@/lib/data";
+import { addTransaction, getCustomerById, getTransactionsByCustomerId, deleteTransaction, updateTransaction } from "@/lib/data";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { EditTransactionSheet } from "./edit-transaction-sheet";
 
 interface CustomerLedgerClientProps {
   customer: Customer;
@@ -49,24 +60,54 @@ export function CustomerLedgerClient({
 }: CustomerLedgerClientProps) {
   const [customer, setCustomer] = useState(initialCustomer);
   const [transactions, setTransactions] = useState(initialTransactions);
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isAddSheetOpen, setIsAddSheetOpen] = useState(false);
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
+  const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
+  const { toast } = useToast();
 
   const refreshData = () => {
-    setCustomer(getCustomerById(initialCustomer.id)!);
-    setTransactions(getTransactionsByCustomerId(initialCustomer.id));
+    const freshCustomer = getCustomerById(initialCustomer.id);
+    if (freshCustomer) {
+      setCustomer(freshCustomer);
+      setTransactions(getTransactionsByCustomerId(initialCustomer.id));
+    }
   };
   
-  const handleAddTransaction = (transactionData:  {
-    customerId: string,
-    date: string,
-    type: 'sale' | 'payment',
-    amount: number,
-    description: string,
-    creditDays: number | null
-  }) => {
+  const handleAddTransaction = (transactionData: Omit<Transaction, 'id' | 'balanceAfter' | 'status'>) => {
     addTransaction(transactionData);
     refreshData();
+    toast({ title: "Success", description: "Transaction added." });
   };
+
+  const handleEditTransaction = (transactionData: Omit<Transaction, 'balanceAfter'>) => {
+    updateTransaction(transactionData);
+    refreshData();
+    toast({ title: "Success", description: "Transaction updated." });
+  };
+  
+  const handleDeleteTransaction = () => {
+    if(transactionToDelete) {
+      try {
+        deleteTransaction(transactionToDelete.id);
+        refreshData();
+        toast({ title: "Success", description: "Transaction deleted." });
+      } catch (e) {
+         toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to delete transaction.",
+        });
+      } finally {
+        setTransactionToDelete(null);
+      }
+    }
+  };
+
+  const openEditSheet = (tx: Transaction) => {
+    setTransactionToEdit(tx);
+    setIsEditSheetOpen(true);
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("en-IN", {
@@ -173,13 +214,10 @@ export function CustomerLedgerClient({
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => openEditSheet(tx)}>
                               <FilePenLine className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                             <DropdownMenuItem>
-                              <Receipt className="mr-2 h-4 w-4" /> View Details
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
+                            <DropdownMenuItem className="text-destructive" onSelect={() => setTransactionToDelete(tx)}>
                               <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -200,16 +238,39 @@ export function CustomerLedgerClient({
         </Card>
       </main>
       <footer className="p-4 border-t sticky bottom-0 bg-background">
-        <Button className="w-full" size="lg" onClick={() => setIsSheetOpen(true)}>
+        <Button className="w-full" size="lg" onClick={() => setIsAddSheetOpen(true)}>
           <Plus className="mr-2 h-5 w-5" /> Add Transaction
         </Button>
       </footer>
       <AddTransactionSheet
-        isOpen={isSheetOpen}
-        setIsOpen={setIsSheetOpen}
+        isOpen={isAddSheetOpen}
+        setIsOpen={setIsAddSheetOpen}
         customer={customer}
         onAddTransaction={handleAddTransaction}
       />
+      {transactionToEdit && (
+        <EditTransactionSheet
+          isOpen={isEditSheetOpen}
+          setIsOpen={setIsEditSheetOpen}
+          customer={customer}
+          transaction={transactionToEdit}
+          onEditTransaction={handleEditTransaction}
+        />
+      )}
+      <AlertDialog open={!!transactionToDelete} onOpenChange={() => setTransactionToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete this transaction.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteTransaction} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
