@@ -1,0 +1,208 @@
+"use client";
+
+import { useState } from "react";
+import type { Customer, Transaction } from "@/lib/types";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  ArrowLeft,
+  CircleDollarSign,
+  FilePenLine,
+  Plus,
+  Receipt,
+  Trash2,
+} from "lucide-react";
+import Link from "next/link";
+import { AddTransactionSheet } from "./add-transaction-sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import { MoreVertical } from "lucide-react";
+
+interface CustomerLedgerClientProps {
+  customer: Customer;
+  transactions: Transaction[];
+}
+
+export function CustomerLedgerClient({
+  customer: initialCustomer,
+  transactions: initialTransactions,
+}: CustomerLedgerClientProps) {
+  const [customer, setCustomer] = useState(initialCustomer);
+  const [transactions, setTransactions] = useState(initialTransactions);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+
+  const handleAddTransaction = (newTransaction: Transaction) => {
+    // In a real app, this would be an API call. Here we simulate the update.
+    setTransactions((prev) =>
+      [...prev, newTransaction].sort(
+        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+      )
+    );
+    // Recalculate balance
+    setCustomer(prev => ({ ...prev, outstandingBalance: newTransaction.balanceAfter }));
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "NPR",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  const isOverdue = (transaction: Transaction) =>
+    transaction.dueDate &&
+    new Date(transaction.dueDate) < new Date() &&
+    transaction.status !== "paid";
+
+  return (
+    <div className="flex flex-col h-full">
+      <header className="bg-card/80 backdrop-blur-sm sticky top-0 z-10 border-b p-4">
+        <div className="flex items-center justify-between gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/customers">
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+          </Button>
+          <div className="flex-1 text-center">
+            <h1 className="text-xl font-bold">{customer.name}</h1>
+            <p className="text-sm text-muted-foreground">
+              {customer.customerId}
+            </p>
+          </div>
+          <div className="w-10">
+            {/* Placeholder for alignment */}
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4 mt-4 text-center">
+          <div>
+            <p className="text-sm text-muted-foreground">Outstanding</p>
+            <p className="text-lg font-bold text-destructive">
+              {formatCurrency(customer.outstandingBalance)}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Credit Limit</p>
+            <p className="text-lg font-bold">
+              {formatCurrency(customer.creditLimit)}
+            </p>
+          </div>
+        </div>
+      </header>
+      <main className="flex-1 p-4 md:p-6 space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle>Transaction History</CardTitle>
+            <CardDescription>
+              A record of all sales and payments for this customer.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead className="text-right">Debit</TableHead>
+                  <TableHead className="text-right">Credit</TableHead>
+                  <TableHead className="text-right hidden md:table-cell">Balance</TableHead>
+                   <TableHead className="text-right"> </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transactions.length > 0 ? (
+                  transactions.map((tx) => (
+                    <TableRow key={tx.id}>
+                      <TableCell>
+                        <div className="font-medium">{formatDate(tx.date)}</div>
+                        {isOverdue(tx) && <Badge variant="destructive">Overdue</Badge>}
+                      </TableCell>
+                      <TableCell>
+                        <p className="truncate max-w-xs">{tx.description}</p>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-destructive">
+                        {tx.type === "sale" ? formatCurrency(tx.amount) : "-"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-green-600">
+                        {tx.type === "payment"
+                          ? formatCurrency(tx.amount)
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="text-right font-mono hidden md:table-cell">
+                        {formatCurrency(tx.balanceAfter)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem>
+                              <FilePenLine className="mr-2 h-4 w-4" /> Edit
+                            </DropdownMenuItem>
+                             <DropdownMenuItem>
+                              <Receipt className="mr-2 h-4 w-4" /> View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="h-24 text-center">
+                      No transactions yet.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </main>
+      <footer className="p-4 border-t sticky bottom-0 bg-background">
+        <Button className="w-full" size="lg" onClick={() => setIsSheetOpen(true)}>
+          <Plus className="mr-2 h-5 w-5" /> Add Transaction
+        </Button>
+      </footer>
+      <AddTransactionSheet
+        isOpen={isSheetOpen}
+        setIsOpen={setIsSheetOpen}
+        customer={customer}
+        onAddTransaction={handleAddTransaction}
+      />
+    </div>
+  );
+}

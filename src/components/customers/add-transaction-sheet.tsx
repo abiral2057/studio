@@ -1,0 +1,263 @@
+"use client";
+
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  RadioGroup,
+  RadioGroupItem,
+} from "@/components/ui/radio-group";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { CalendarIcon, Sparkles } from "lucide-react";
+import { format } from "date-fns";
+import type { Customer, Transaction } from "@/lib/types";
+import { suggestDescriptionAction } from "@/lib/actions";
+import { useToast } from "@/hooks/use-toast";
+
+const formSchema = z.object({
+  date: z.date(),
+  type: z.enum(["sale", "payment"]),
+  amount: z.coerce.number().positive("Amount must be positive."),
+  description: z.string().min(1, "Description is required."),
+  creditDays: z.coerce.number().int().min(0).optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+interface AddTransactionSheetProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  customer: Customer;
+  onAddTransaction: (transaction: Transaction) => void;
+}
+
+export function AddTransactionSheet({
+  isOpen,
+  setIsOpen,
+  customer,
+  onAddTransaction,
+}: AddTransactionSheetProps) {
+  const [isSuggesting, setIsSuggesting] = useState(false);
+  const { toast } = useToast();
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      date: new Date(),
+      type: "sale",
+      amount: undefined,
+      description: "",
+      creditDays: customer.defaultCreditDays,
+    },
+  });
+
+  const onSubmit = (values: FormValues) => {
+    const amount = values.type === 'sale' ? values.amount : -values.amount;
+    const newBalance = customer.outstandingBalance + amount;
+
+    const newTransaction: Transaction = {
+      id: new Date().toISOString(), // Temporary ID
+      customerId: customer.id,
+      date: values.date.toISOString(),
+      type: values.type,
+      amount: values.amount,
+      description: values.description,
+      creditDays: values.type === 'sale' ? values.creditDays || 0 : null,
+      dueDate: values.type === 'sale' ? new Date(values.date.getTime() + (values.creditDays || 0) * 24 * 60 * 60 * 1000).toISOString() : null,
+      balanceAfter: newBalance,
+      status: values.type === 'payment' ? 'paid' : 'due',
+    };
+
+    onAddTransaction(newTransaction);
+    form.reset();
+    setIsOpen(false);
+  };
+  
+  const handleSuggestDescription = async () => {
+    const { amount, type, description } = form.getValues();
+    if (!amount) {
+      form.setError("amount", { message: "Amount is needed to suggest a description." });
+      return;
+    }
+    
+    setIsSuggesting(true);
+    const result = await suggestDescriptionAction({
+      amount,
+      transactionType: type,
+      customerName: customer.name,
+      previousDescription: description,
+    });
+    setIsSuggesting(false);
+
+    if (result.success && result.description) {
+      form.setValue("description", result.description);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Suggestion Failed",
+        description: result.error,
+      });
+    }
+  };
+
+  return (
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <SheetContent className="flex flex-col">
+        <SheetHeader>
+          <SheetTitle>Add Transaction</SheetTitle>
+          <SheetDescription>
+            Record a new sale or payment for {customer.name}.
+          </SheetDescription>
+        </SheetHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 space-y-4 overflow-y-auto pr-6">
+            <FormField
+              control={form.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Date</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem className="space-y-3">
+                  <FormLabel>Transaction Type</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex space-x-4"
+                    >
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="sale" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Sale</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-x-2 space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="payment" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Payment</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Amount</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.valueAsNumber)} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+             <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <div className="flex justify-between items-center">
+                      <FormLabel>Description</FormLabel>
+                      <Button type="button" variant="ghost" size="sm" onClick={handleSuggestDescription} disabled={isSuggesting}>
+                        <Sparkles className={cn("mr-2 h-4 w-4", isSuggesting && "animate-spin")} />
+                        {isSuggesting ? "Thinking..." : "Suggest"}
+                      </Button>
+                    </div>
+                    <FormControl>
+                      <Textarea placeholder="e.g., Invoice #123, Rice bags" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            {form.watch("type") === "sale" && (
+              <FormField
+                control={form.control}
+                name="creditDays"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Credit Days</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+            <SheetFooter className="mt-auto pt-4">
+              <Button type="submit" className="w-full">Save Transaction</Button>
+            </SheetFooter>
+          </form>
+        </Form>
+      </SheetContent>
+    </Sheet>
+  );
+}
