@@ -28,7 +28,7 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@/components/ui/radio-group";
-import { DatePickerWithNepali } from "@/components/ui/date-picker-with-nepali";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Sparkles, Loader2 } from "lucide-react";
 import type { Customer, Transaction } from "@/lib/types";
 import { suggestDescriptionAction } from "@/lib/actions";
@@ -151,7 +151,7 @@ export function AddTransactionSheet({
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Date</FormLabel>
-                   <DatePickerWithNepali
+                   <DatePicker
                       value={field.value}
                       onChange={field.onChange}
                     />
