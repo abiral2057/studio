@@ -33,6 +33,7 @@ import { Sparkles, Loader2 } from "lucide-react";
 import type { Customer, Transaction } from "@/lib/types";
 import { suggestDescriptionAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 const formSchema = z.object({
   date: z.date(),
