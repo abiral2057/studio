@@ -25,6 +25,7 @@ import {
   FilePenLine,
   Plus,
   Trash2,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { AddTransactionSheet } from "./add-transaction-sheet";
@@ -48,7 +49,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { EditTransactionSheet } from "./edit-transaction-sheet";
-import { useRouter } from "next/navigation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CustomerLedgerClientProps {
   customer: Customer;
@@ -66,32 +67,35 @@ export function CustomerLedgerClient({
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const { toast } = useToast();
-  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   const refreshData = () => {
     startTransition(async () => {
-      const updatedCustomer = await getCustomerById(customer.id);
-      const updatedTransactions = await getTransactionsByCustomerId(customer.id);
-      if (updatedCustomer) setCustomer(updatedCustomer);
-      setTransactions(updatedTransactions);
+      try {
+        const updatedCustomer = await getCustomerById(customer.id);
+        const updatedTransactions = await getTransactionsByCustomerId(customer.id);
+        if (updatedCustomer) setCustomer(updatedCustomer);
+        setTransactions(updatedTransactions);
+      } catch (error) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "Failed to refresh data.",
+        });
+      }
     });
   };
   
-  const handleAddTransaction = (transactionData: Omit<Transaction, 'id' | 'balanceAfter' | 'status'>) => {
-    startTransition(async () => {
-      await addTransaction(transactionData);
-      refreshData();
-      toast({ title: "Success", description: "Transaction added." });
-    });
+  const handleAddTransaction = async (transactionData: Omit<Transaction, 'id' | 'balanceAfter' | 'status'>) => {
+    await addTransaction(transactionData);
+    refreshData();
+    toast({ title: "Success", description: "Transaction added." });
   };
 
-  const handleEditTransaction = (transactionData: Omit<Transaction, 'balanceAfter'>) => {
-    startTransition(async () => {
-      await updateTransaction(transactionData);
-      refreshData();
-      toast({ title: "Success", description: "Transaction updated." });
-    });
+  const handleEditTransaction = async (transactionData: Omit<Transaction, 'balanceAfter'>) => {
+    await updateTransaction(transactionData);
+    refreshData();
+    toast({ title: "Success", description: "Transaction updated." });
   };
   
   const handleDeleteTransaction = () => {
@@ -149,8 +153,8 @@ export function CustomerLedgerClient({
               <ArrowLeft className="h-5 w-5" />
             </Link>
           </Button>
-          <div className="flex-1 text-center">
-            <h1 className="text-xl font-bold">{customer.name}</h1>
+          <div className="flex-1 text-center truncate">
+            <h1 className="text-xl font-bold truncate">{customer.name}</h1>
             <p className="text-sm text-muted-foreground">
               {customer.customerId}
             </p>
@@ -162,15 +166,19 @@ export function CustomerLedgerClient({
         <div className="grid grid-cols-2 gap-4 mt-4 text-center">
           <div>
             <p className="text-sm text-muted-foreground">Outstanding</p>
-            <p className="text-lg font-bold text-destructive">
-              {formatCurrency(customer.outstandingBalance)}
-            </p>
+             {isPending ? <Skeleton className="h-7 w-32 mx-auto" /> :
+              <p className="text-lg font-bold text-destructive">
+                {formatCurrency(customer.outstandingBalance)}
+              </p>
+            }
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Credit Limit</p>
-            <p className="text-lg font-bold">
-              {formatCurrency(customer.creditLimit)}
-            </p>
+            {isPending ? <Skeleton className="h-7 w-32 mx-auto" /> :
+              <p className="text-lg font-bold">
+                {formatCurrency(customer.creditLimit)}
+              </p>
+            }
           </div>
         </div>
       </header>
@@ -194,7 +202,25 @@ export function CustomerLedgerClient({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {transactions.length > 0 ? (
+                  {isPending && transactions.length === 0 ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <Skeleton className="h-5 w-3/4" />
+                          <Skeleton className="h-4 w-1/2 mt-1" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Skeleton className="h-5 w-20 ml-auto" />
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell text-right">
+                          <Skeleton className="h-5 w-20 ml-auto" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Skeleton className="h-8 w-8 ml-auto" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : transactions.length > 0 ? (
                     transactions.map((tx) => (
                       <TableRow key={tx.id}>
                         <TableCell>
@@ -213,7 +239,7 @@ export function CustomerLedgerClient({
                         <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" disabled={isPending}>
                                 <MoreVertical className="h-4 w-4" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -244,7 +270,8 @@ export function CustomerLedgerClient({
       </main>
       <footer className="p-4 border-t sticky bottom-0 bg-background">
         <Button className="w-full" size="lg" onClick={() => setIsAddSheetOpen(true)} disabled={isPending}>
-          <Plus className="mr-2 h-5 w-5" /> {isPending ? 'Processing...' : 'Add Transaction'}
+          {isPending ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Plus className="mr-2 h-5 w-5" />}
+          {isPending ? 'Processing...' : 'Add Transaction'}
         </Button>
       </footer>
       <AddTransactionSheet

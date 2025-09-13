@@ -5,7 +5,7 @@ import {
   type SmartTransactionDescriptionInput,
 } from '@/ai/flows/smart-transaction-descriptions';
 import type { Customer, Transaction } from '@/lib/types';
-import { readDb, writeDb, getCustomerById as getCustomerByIdData, getTransactionsByCustomerId as getTransactionsByCustomerIdData } from '@/lib/data';
+import { readDb, writeDb, getCustomerById as getCustomerByIdData, getTransactionsByCustomerId as getTransactionsByCustomerIdData, getCustomers as getCustomersData } from '@/lib/data';
 
 export async function suggestDescriptionAction(
   input: SmartTransactionDescriptionInput
@@ -138,4 +138,8 @@ export async function getCustomerById(id: string): Promise<Customer | undefined>
 
 export async function getTransactionsByCustomerId(customerId: string): Promise<Transaction[]> {
   return getTransactionsByCustomerIdData(customerId);
+}
+
+export async function getCustomers(): Promise<Customer[]> {
+    return getCustomersData();
 }

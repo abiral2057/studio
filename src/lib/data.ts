@@ -182,11 +182,12 @@ export const readDb = (): DbData => {
   try {
     if (fs.existsSync(dbPath)) {
       const fileContent = fs.readFileSync(dbPath, 'utf-8');
-      return JSON.parse(fileContent);
-    } else {
-      fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2));
-      return initialData;
+      if (fileContent) {
+        return JSON.parse(fileContent);
+      }
     }
+    fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2));
+    return initialData;
   } catch (error) {
     console.error("Error reading from DB, returning initial data", error);
     return initialData;
@@ -203,7 +204,7 @@ export const writeDb = (data: DbData) => {
 
 export const getCustomers = (): Customer[] => {
   const db = readDb();
-  return JSON.parse(JSON.stringify(db.customers));
+  return db.customers.sort((a, b) => a.name.localeCompare(b.name));
 };
 
 export const getCustomerById = (id: string): Customer | undefined => {
@@ -221,5 +222,5 @@ export const getTransactionsByCustomerId = (customerId: string): Transaction[] =
   const db = readDb();
   return db.transactions
     .filter((t) => t.customerId === customerId)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };

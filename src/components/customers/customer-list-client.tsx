@@ -28,7 +28,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { AddCustomerSheet } from "./add-customer-sheet";
-import { addCustomer, deleteCustomer } from "@/lib/actions";
+import { addCustomer, deleteCustomer, getCustomers } from "@/lib/actions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +47,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface CustomerListClientProps {
   customers: Customer[];
@@ -64,12 +65,17 @@ export function CustomerListClient({
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
 
-  const handleAddCustomer = (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>) => {
+  const refreshCustomers = () => {
     startTransition(async () => {
-      const newCustomer = await addCustomer(newCustomerData);
-      setCustomers(prev => [...prev, newCustomer].sort((a, b) => a.name.localeCompare(b.name)));
-      toast({ title: "Success", description: "Customer added." });
+      const updatedCustomers = await getCustomers();
+      setCustomers(updatedCustomers);
     });
+  };
+
+  const handleAddCustomer = async (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>) => {
+    await addCustomer(newCustomerData);
+    refreshCustomers();
+    toast({ title: "Success", description: "Customer added." });
   };
 
   const handleDeleteCustomer = () => {
@@ -77,7 +83,7 @@ export function CustomerListClient({
       startTransition(async () => {
         try {
           await deleteCustomer(customerToDelete.id);
-          setCustomers(prev => prev.filter(c => c.id !== customerToDelete.id));
+          refreshCustomers();
           toast({ title: "Success", description: "Customer deleted." });
         } catch (error) {
           toast({
@@ -114,7 +120,7 @@ export function CustomerListClient({
     if (names.length > 1) {
       return `${names[0][0]}${names[names.length - 1][0]}`;
     }
-    return names[0].substring(0, 2);
+    return name.substring(0, 2);
   };
 
   const formatCurrency = (amount: number) => {
@@ -139,81 +145,107 @@ export function CustomerListClient({
                   className="pl-10 w-full"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  disabled={isPending}
                 />
               </div>
               <Tabs value={filter} onValueChange={setFilter} className="w-full md:w-auto">
                 <TabsList className="grid grid-cols-3 w-full md:w-auto">
-                  <TabsTrigger value="all">All</TabsTrigger>
-                  <TabsTrigger value="overdue">Overdue</TabsTrigger>
-                  <TabsTrigger value="limitExceeded">Limit</TabsTrigger>
+                  <TabsTrigger value="all" disabled={isPending}>All</TabsTrigger>
+                  <TabsTrigger value="overdue" disabled={isPending}>Overdue</TabsTrigger>
+                  <TabsTrigger value="limitExceeded" disabled={isPending}>Limit</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead className="hidden md:table-cell">Phone</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="w-[80px] text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredCustomers.length > 0 ? (
-                  filteredCustomers.map((customer) => (
-                    <TableRow key={customer.id} className={isPending ? 'opacity-50' : ''}>
-                      <TableCell>
-                        <Link href={`/customers/${customer.id}`}>
-                          <div className="flex items-center gap-3 hover:underline">
-                            <Avatar>
-                              <AvatarFallback>{getInitials(customer.name)}</AvatarFallback>
-                            </Avatar>
+            <div className={isPending ? 'opacity-50' : ''}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden md:table-cell">Phone</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead className="w-[80px] text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {isPending ? (
+                     Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={`skel-${i}`}>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Skeleton className="h-10 w-10 rounded-full" />
                             <div>
-                              <div className="font-medium">{customer.name}</div>
-                              <div className="text-sm text-muted-foreground">
-                                {customer.customerId}
-                              </div>
+                              <Skeleton className="h-5 w-24" />
+                              <Skeleton className="h-4 w-16 mt-1" />
                             </div>
                           </div>
-                        </Link>
-                      </TableCell>
-                      <TableCell className="hidden md:table-cell">{customer.phone}</TableCell>
-                      <TableCell className="text-right font-mono">
-                        <span className={customer.outstandingBalance > 0 ? 'text-destructive' : 'text-green-600'}>
-                          {formatCurrency(customer.outstandingBalance)}
-                        </span>
-                      </TableCell>
-                       <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                             <DropdownMenuItem onSelect={() => router.push(`/customers/${customer.id}`)}>
-                              <ArrowRight className="mr-2 h-4 w-4" /> View Ledger
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onSelect={() => setCustomerToDelete(customer)}>
-                              <Trash2 className="mr-2 h-4 w-4" />
-                              <span>Delete Customer</span>
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        </TableCell>
+                         <TableCell className="hidden md:table-cell">
+                          <Skeleton className="h-5 w-28" />
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Skeleton className="h-5 w-20 ml-auto" />
+                        </TableCell>
+                         <TableCell className="text-right">
+                          <Skeleton className="h-8 w-8 ml-auto" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : filteredCustomers.length > 0 ? (
+                    filteredCustomers.map((customer) => (
+                      <TableRow key={customer.id}>
+                        <TableCell>
+                          <Link href={`/customers/${customer.id}`}>
+                            <div className="flex items-center gap-3 hover:underline">
+                              <Avatar>
+                                <AvatarFallback>{getInitials(customer.name)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <div className="font-medium truncate max-w-[150px] sm:max-w-none">{customer.name}</div>
+                                <div className="text-sm text-muted-foreground">
+                                  {customer.customerId}
+                                </div>
+                              </div>
+                            </div>
+                          </Link>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{customer.phone}</TableCell>
+                        <TableCell className="text-right font-mono">
+                          <span className={customer.outstandingBalance > 0 ? 'text-destructive' : 'text-green-600'}>
+                            {formatCurrency(customer.outstandingBalance)}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" disabled={isPending}>
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onSelect={() => router.push(`/customers/${customer.id}`)}>
+                                <ArrowRight className="mr-2 h-4 w-4" /> View Ledger
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onSelect={() => setCustomerToDelete(customer)}>
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                <span>Delete Customer</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        No customers found.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      No customers found.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

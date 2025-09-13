@@ -1,6 +1,7 @@
 
 "use client";
 
+import { useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -23,6 +24,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import type { Customer } from "@/lib/types";
+import { Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required."),
@@ -38,7 +40,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddCustomerSheetProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onAddCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>) => void;
+  onAddCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>) => Promise<void>;
 }
 
 export function AddCustomerSheet({
@@ -46,6 +48,8 @@ export function AddCustomerSheet({
   setIsOpen,
   onAddCustomer,
 }: AddCustomerSheetProps) {
+  const [isPending, startTransition] = useTransition();
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -54,32 +58,46 @@ export function AddCustomerSheet({
       address: "",
       creditLimit: 0,
       defaultCreditDays: 0,
-      customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
     },
   });
 
-  const onSubmit = (values: FormValues) => {
-    onAddCustomer({
-      customerId: values.customerId,
-      name: values.name,
-      phone: values.phone,
-      address: values.address || "",
-      creditLimit: values.creditLimit || 0,
-      defaultCreditDays: values.defaultCreditDays || 0,
-    });
+  // Effect to set customerId only once on mount
+  React.useEffect(() => {
     form.reset({
-      name: "",
-      phone: "",
-      address: "",
-      creditLimit: 0,
-      defaultCreditDays: 0,
-      customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+      ...form.getValues(),
+       customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
     });
-    setIsOpen(false);
+  }, [form, isOpen]);
+
+
+  const onSubmit = (values: FormValues) => {
+    startTransition(async () => {
+      await onAddCustomer({
+        customerId: values.customerId,
+        name: values.name,
+        phone: values.phone,
+        address: values.address || "",
+        creditLimit: values.creditLimit || 0,
+        defaultCreditDays: values.defaultCreditDays || 0,
+      });
+      setIsOpen(false);
+    });
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={isOpen} onOpenChange={(open) => {
+      if (!open) {
+        form.reset({
+          name: "",
+          phone: "",
+          address: "",
+          creditLimit: 0,
+          defaultCreditDays: 0,
+          customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+        });
+      }
+      setIsOpen(open);
+    }}>
       <SheetContent className="flex flex-col">
         <SheetHeader>
           <SheetTitle>Add New Customer</SheetTitle>
@@ -96,7 +114,7 @@ export function AddCustomerSheet({
                 <FormItem>
                   <FormLabel>Customer ID</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., CUST-123" {...field} />
+                    <Input placeholder="e.g., CUST-123" {...field} disabled/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -168,7 +186,10 @@ export function AddCustomerSheet({
               )}
             />
             <SheetFooter className="mt-auto pt-4">
-              <Button type="submit" className="w-full">Save Customer</Button>
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isPending ? "Saving..." : "Save Customer"}
+              </Button>
             </SheetFooter>
           </form>
         </Form>

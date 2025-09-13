@@ -45,17 +45,6 @@
       "createdAt": "2023-04-05T14:00:00Z"
     },
     {
-      "id": "5",
-      "customerId": "CUST-005",
-      "name": "Eshwar Yadav",
-      "phone": "9876543214",
-      "address": "212 Terai Path, Birgunj",
-      "creditLimit": 40000,
-      "outstandingBalance": 42000,
-      "defaultCreditDays": 20,
-      "createdAt": "2023-05-01T16:45:00Z"
-    },
-    {
       "customerId": "CUST-CXNR2",
       "name": "Abiral Shrestha",
       "phone": "9816232444",
@@ -150,18 +139,6 @@
       "creditDays": 45,
       "dueDate": "2025-10-13T12:48:55.290Z",
       "balanceAfter": 75000,
-      "status": "due"
-    },
-    {
-      "id": "t8",
-      "customerId": "5",
-      "date": "2024-04-10T09:00:00Z",
-      "type": "sale",
-      "amount": 42000,
-      "description": "Bulk textile order",
-      "creditDays": 20,
-      "dueDate": "2024-04-30T09:00:00Z",
-      "balanceAfter": 42000,
       "status": "due"
     },
     {

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -35,7 +35,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { CalendarIcon, Sparkles } from "lucide-react";
+import { CalendarIcon, Sparkles, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import type { Customer, Transaction } from "@/lib/types";
 import { suggestDescriptionAction } from "@/lib/actions";
@@ -56,7 +56,7 @@ interface EditTransactionSheetProps {
   setIsOpen: (isOpen: boolean) => void;
   customer: Customer;
   transaction: Transaction;
-  onEditTransaction: (transactionData: Omit<Transaction, 'balanceAfter'>) => void;
+  onEditTransaction: (transactionData: Omit<Transaction, 'balanceAfter'>) => Promise<void>;
 }
 
 export function EditTransactionSheet({
@@ -67,6 +67,7 @@ export function EditTransactionSheet({
   onEditTransaction,
 }: EditTransactionSheetProps) {
   const [isSuggesting, setIsSuggesting] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
 
   const form = useForm<FormValues>({
@@ -92,15 +93,17 @@ export function EditTransactionSheet({
 
 
   const onSubmit = (values: FormValues) => {
-    onEditTransaction({
-      ...transaction,
-      date: values.date.toISOString(),
-      type: values.type,
-      amount: values.amount,
-      description: values.description,
-      creditDays: values.type === 'sale' ? values.creditDays || 0 : null,
+    startTransition(async () => {
+      await onEditTransaction({
+        ...transaction,
+        date: values.date.toISOString(),
+        type: values.type,
+        amount: values.amount,
+        description: values.description,
+        creditDays: values.type === 'sale' ? values.creditDays || 0 : null,
+      });
+      setIsOpen(false);
     });
-    setIsOpen(false);
   };
   
   const handleSuggestDescription = async () => {
@@ -111,22 +114,31 @@ export function EditTransactionSheet({
     }
     
     setIsSuggesting(true);
-    const result = await suggestDescriptionAction({
-      amount,
-      transactionType: type,
-      customerName: customer.name,
-      previousDescription: description,
-    });
-    setIsSuggesting(false);
+    try {
+      const result = await suggestDescriptionAction({
+        amount,
+        transactionType: type,
+        customerName: customer.name,
+        previousDescription: description,
+      });
 
-    if (result.success && result.description) {
-      form.setValue("description", result.description);
-    } else {
+      if (result.success && result.description) {
+        form.setValue("description", result.description);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Suggestion Failed",
+          description: result.error,
+        });
+      }
+    } catch(e) {
       toast({
         variant: "destructive",
-        title: "Suggestion Failed",
-        description: result.error,
+        title: "Error",
+        description: "An unexpected error occurred.",
       });
+    } finally {
+      setIsSuggesting(false);
     }
   };
 
@@ -229,7 +241,7 @@ export function EditTransactionSheet({
                   <FormItem>
                     <div className="flex justify-between items-center">
                       <FormLabel>Description</FormLabel>
-                      <Button type="button" variant="ghost" size="sm" onClick={handleSuggestDescription} disabled={isSuggesting}>
+                      <Button type="button" variant="ghost" size="sm" onClick={handleSuggestDescription} disabled={isSuggesting || isPending}>
                         <Sparkles className={cn("mr-2 h-4 w-4", isSuggesting && "animate-spin")} />
                         {isSuggesting ? "Thinking..." : "Suggest"}
                       </Button>
@@ -257,7 +269,10 @@ export function EditTransactionSheet({
               />
             )}
             <SheetFooter className="mt-auto pt-4">
-              <Button type="submit" className="w-full">Save Changes</Button>
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isPending ? "Saving..." : "Save Changes"}
+              </Button>
             </SheetFooter>
           </form>
         </Form>
