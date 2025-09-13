@@ -182,7 +182,7 @@ export function CustomerLedgerClient({
           </div>
         </div>
       </header>
-      <main className="flex-1 p-4 md:p-6 space-y-4">
+      <main className="flex-1 p-2 sm:p-4 md:p-6 space-y-4">
         <Card>
           <CardHeader>
             <CardTitle>Transaction History</CardTitle>

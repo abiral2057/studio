@@ -91,7 +91,7 @@ export function DashboardClient({
   return (
     <div className="flex-1">
       <Header title="Dashboard" />
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="p-2 sm:p-4 md:p-6 space-y-4">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -101,7 +101,7 @@ export function DashboardClient({
               <CircleDollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
+              <div className="text-xl sm:text-2xl font-bold">
                 {formatCurrency(totalOutstanding)}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -117,7 +117,7 @@ export function DashboardClient({
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{customers.length}</div>
+              <div className="text-xl sm:text-2xl font-bold">{customers.length}</div>
               <p className="text-xs text-muted-foreground">
                 Total customers managed
               </p>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -67,7 +68,7 @@ export function ReportsClient({ customers, transactions }: ReportsClientProps) {
   };
 
   return (
-    <div className="flex-1 p-4 md:p-6">
+    <div className="flex-1 p-2 sm:p-4 md:p-6">
       <Header title="Reports & Export" />
       <div className="mt-4 md:mt-6">
         <Card>
