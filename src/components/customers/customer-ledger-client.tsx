@@ -215,12 +215,13 @@ export function CustomerLedgerClient({
                     ))
                   ) : transactions.length > 0 ? (
                     transactions.map((tx) => {
-                      const { englishDate } = formatLedgerDate(tx.date);
+                      const { englishDate, nepaliDate } = formatLedgerDate(tx.date);
                       return (
                       <TableRow key={tx.id}>
                         <TableCell>
                            <div className="font-medium truncate max-w-[140px] sm:max-w-xs">{tx.description}</div>
                            <div className="text-sm text-muted-foreground">{englishDate}</div>
+                           <div className="text-xs text-muted-foreground">{nepaliDate}</div>
                            {isOverdue(tx) && <Badge variant="destructive" className="mt-1">Overdue</Badge>}
                         </TableCell>
                         <TableCell className="text-right">
