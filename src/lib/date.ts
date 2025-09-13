@@ -6,6 +6,7 @@ export const formatLedgerDate = (dateString: string) => {
     day: "2-digit",
     month: "short",
     year: "numeric",
+    timeZone: "UTC",
   });
   
   const nepaliDate = new NepaliDate(date);
