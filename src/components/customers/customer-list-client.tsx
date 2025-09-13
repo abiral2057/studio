@@ -195,7 +195,7 @@ export function CustomerListClient({
                   ) : filteredCustomers.length > 0 ? (
                     filteredCustomers.map((customer) => (
                       <TableRow key={customer.id}>
-                        <TableCell className="pr-1 sm:pr-2">
+                        <TableCell className="pr-1 sm:px-4">
                           <Link href={`/customers/${customer.id}`}>
                             <div className="flex items-center gap-3 hover:underline">
                               <Avatar>
@@ -210,13 +210,13 @@ export function CustomerListClient({
                             </div>
                           </Link>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell px-1 sm:px-2">{customer.phone}</TableCell>
-                        <TableCell className="text-right font-mono px-1 sm:px-2">
+                        <TableCell className="hidden md:table-cell px-1 sm:px-4">{customer.phone}</TableCell>
+                        <TableCell className="text-right font-mono px-1 sm:px-4">
                           <span className={customer.outstandingBalance > 0 ? 'text-destructive' : 'text-green-600'}>
                             {formatCurrency(customer.outstandingBalance)}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right pl-1 sm:pl-2">
+                        <TableCell className="text-right pl-1 sm:px-4">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" disabled={isPending}>
@@ -274,3 +274,5 @@ export function CustomerListClient({
     </div>
   );
 }
+
+    
