@@ -25,7 +25,8 @@ import {
   FilePenLine,
   Plus,
   Trash2,
-  Loader2
+  Loader2,
+  Download,
 } from "lucide-react";
 import Link from "next/link";
 import { AddTransactionSheet } from "./add-transaction-sheet";
@@ -51,6 +52,8 @@ import { useToast } from "@/hooks/use-toast";
 import { EditTransactionSheet } from "./edit-transaction-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatLedgerDate } from "@/lib/date";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface CustomerLedgerClientProps {
   customer: Customer;
@@ -137,6 +140,58 @@ export function CustomerLedgerClient({
     new Date(transaction.dueDate) < new Date() &&
     transaction.status !== "paid";
 
+  const handleDownloadPdf = () => {
+    const doc = new jsPDF();
+
+    // Add header
+    doc.setFontSize(20);
+    doc.text("Customer Ledger", 14, 22);
+    doc.setFontSize(12);
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 14, 30);
+
+    // Add customer details
+    doc.setFontSize(14);
+    doc.text("Customer Information", 14, 45);
+    doc.setFontSize(10);
+    const customerDetails = [
+      `Name: ${customer.name}`,
+      `Customer ID: ${customer.customerId}`,
+      `Phone: ${customer.phone}`,
+      `Address: ${customer.address}`,
+      `Outstanding Balance: ${formatCurrency(customer.outstandingBalance)}`,
+      `Credit Limit: ${formatCurrency(customer.creditLimit)}`,
+    ];
+    doc.text(customerDetails, 14, 52);
+
+
+    // Add transaction table
+    const tableColumn = ["Date", "Description", "Type", "Amount", "Balance"];
+    const tableRows: (string | number)[][] = [];
+
+    transactions.forEach(tx => {
+      const { englishDate } = formatLedgerDate(tx.date);
+      const transactionData = [
+        englishDate,
+        tx.description,
+        tx.type,
+        formatCurrency(tx.amount),
+        formatCurrency(tx.balanceAfter)
+      ];
+      tableRows.push(transactionData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 80,
+      headStyles: { fillColor: [63, 81, 181] },
+      theme: 'grid'
+    });
+    
+    // Save the PDF
+    doc.save(`Ledger-${customer.name.replace(/\s/g, '_')}-${customer.customerId}.pdf`);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <header className="bg-card/80 backdrop-blur-sm sticky top-0 z-10 border-b p-4">
@@ -177,11 +232,17 @@ export function CustomerLedgerClient({
       </header>
       <main className="flex-1 p-2 sm:p-4 md:p-6 space-y-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Transaction History</CardTitle>
-            <CardDescription>
-              A record of all sales and payments for this customer.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle>Transaction History</CardTitle>
+              <CardDescription>
+                A record of all sales and payments for this customer.
+              </CardDescription>
+            </div>
+            <Button variant="outline" size="sm" onClick={handleDownloadPdf}>
+              <Download className="mr-2 h-4 w-4" />
+              Download PDF
+            </Button>
           </CardHeader>
           <CardContent>
             <div className={`${isPending ? "opacity-50" : ""} mobile-table-container`}>
