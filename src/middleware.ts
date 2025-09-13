@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getSessionFromCookie } from '@/lib/session';
+import { cookies } from 'next/headers';
 
 // The middleware will run for all paths except for the ones specified in the matcher
 export const config = {
@@ -7,7 +8,8 @@ export const config = {
 };
 
 export async function middleware(request: NextRequest) {
-  const session = await getSessionFromCookie();
+  const cookieStore = cookies();
+  const session = await getSessionFromCookie(cookieStore);
   const { pathname } = request.nextUrl;
 
   // If the user is not authenticated and is trying to access a protected page,

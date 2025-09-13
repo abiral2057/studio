@@ -1,5 +1,5 @@
 
-import { cookies } from 'next/headers';
+import type { ReadonlyRequestCookies } from 'next/dist/server/web/spec-extension/adapters/request-cookies';
 import { SignJWT, jwtVerify } from 'jose';
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'a-very-secret-and-secure-key-for-jwt');
@@ -25,8 +25,8 @@ export async function decrypt(session: string | undefined = '') {
 }
 
 // This function is safe for the Edge runtime as it only deals with cookies.
-export async function getSessionFromCookie() {
-  const sessionCookie = cookies().get(cookieName)?.value;
+export async function getSessionFromCookie(cookieStore: ReadonlyRequestCookies) {
+  const sessionCookie = cookieStore.get(cookieName)?.value;
   if (!sessionCookie) return null;
   return await decrypt(sessionCookie);
 }
