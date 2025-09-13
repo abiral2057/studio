@@ -1,9 +1,16 @@
 import type { Customer, Transaction } from "@/lib/types";
+import fs from "fs";
+import path from "path";
 
-// In-memory "database" to simulate persistence during user session.
-// This will reset on server restart.
+// Use a JSON file for simple, persistent storage.
+const dbPath = path.join(process.cwd(), 'src', 'lib', 'db.json');
 
-let DB = {
+type DbData = {
+  customers: Customer[];
+  transactions: Transaction[];
+}
+
+const initialData: DbData = {
   customers: [
     {
       id: "1",
@@ -60,7 +67,7 @@ let DB = {
       defaultCreditDays: 20,
       createdAt: "2023-05-01T16:45:00Z",
     },
-  ] as Customer[],
+  ],
   transactions: [
     // Transactions for Aarav Sharma (CUST-001)
     {
@@ -165,8 +172,34 @@ let DB = {
       balanceAfter: 42000,
       status: "due",
     },
-  ] as Transaction[],
+  ]
 };
+
+const readDb = (): DbData => {
+  try {
+    if (fs.existsSync(dbPath)) {
+      const fileContent = fs.readFileSync(dbPath, 'utf-8');
+      return JSON.parse(fileContent);
+    } else {
+      fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2));
+      return initialData;
+    }
+  } catch (error) {
+    console.error("Error reading from DB, returning initial data", error);
+    return initialData;
+  }
+};
+
+const writeDb = (data: DbData) => {
+  try {
+    fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
+  } catch (error) {
+    console.error("Error writing to DB", error);
+  }
+};
+
+let DB = readDb();
+
 
 const recalculateBalances = (customerId: string) => {
   const customerTransactions = DB.transactions
@@ -184,6 +217,7 @@ const recalculateBalances = (customerId: string) => {
   if (customer) {
     customer.outstandingBalance = currentBalance;
   }
+  writeDb(DB);
 };
 
 
@@ -191,15 +225,18 @@ const recalculateBalances = (customerId: string) => {
 // This ensures that components always get the latest data.
 
 export const getCustomers = (): Customer[] => {
+  DB = readDb();
   return JSON.parse(JSON.stringify(DB.customers));
 };
 
 export const getCustomerById = (id: string): Customer | undefined => {
+  DB = readDb();
   const customer = DB.customers.find((c) => c.id === id);
   return customer ? JSON.parse(JSON.stringify(customer)) : undefined;
 };
 
 export const addCustomer = (customer: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>): Customer => {
+  DB = readDb();
   const newCustomer: Customer = {
     ...customer,
     id: `CUST-${Date.now()}`,
@@ -207,23 +244,28 @@ export const addCustomer = (customer: Omit<Customer, 'id' | 'createdAt' | 'outst
     createdAt: new Date().toISOString(),
   };
   DB.customers.push(newCustomer);
+  writeDb(DB);
   return JSON.parse(JSON.stringify(newCustomer));
 };
 
 export const updateCustomer = (updatedCustomer: Omit<Customer, 'outstandingBalance' | 'createdAt'>): Customer => {
+  DB = readDb();
   const index = DB.customers.findIndex(c => c.id === updatedCustomer.id);
   if (index !== -1) {
     DB.customers[index] = { ...DB.customers[index], ...updatedCustomer };
+    writeDb(DB);
     return JSON.parse(JSON.stringify(DB.customers[index]));
   }
   throw new Error("Customer not found");
 };
 
 export const deleteCustomer = (id: string): void => {
+  DB = readDb();
   const index = DB.customers.findIndex(c => c.id === id);
   if (index !== -1) {
     DB.customers.splice(index, 1);
     DB.transactions = DB.transactions.filter(t => t.customerId !== id);
+    writeDb(DB);
   } else {
     throw new Error("Customer not found");
   }
@@ -231,16 +273,19 @@ export const deleteCustomer = (id: string): void => {
 
 
 export const getTransactions = (): Transaction[] => {
+  DB = readDb();
   return JSON.parse(JSON.stringify(DB.transactions));
 };
 
 export const getTransactionsByCustomerId = (customerId: string): Transaction[] => {
+  DB = readDb();
   return DB.transactions
     .filter((t) => t.customerId === customerId)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
 export const addTransaction = (transaction: Omit<Transaction, 'id' | 'balanceAfter' | 'status'>): Transaction => {
+  DB = readDb();
   const newTransaction: Transaction = {
     ...transaction,
     id: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -250,13 +295,14 @@ export const addTransaction = (transaction: Omit<Transaction, 'id' | 'balanceAft
   };
   
   DB.transactions.push(newTransaction);
-  recalculateBalances(transaction.customerId);
+  recalculateBalances(transaction.customerId); // this also writes to DB
   
   const finalTransaction = DB.transactions.find(t => t.id === newTransaction.id)!;
   return JSON.parse(JSON.stringify(finalTransaction));
 }
 
 export const updateTransaction = (updatedTransaction: Omit<Transaction, 'balanceAfter'>): Transaction => {
+  DB = readDb();
   const index = DB.transactions.findIndex(t => t.id === updatedTransaction.id);
   if (index !== -1) {
      DB.transactions[index] = {
@@ -264,7 +310,7 @@ export const updateTransaction = (updatedTransaction: Omit<Transaction, 'balance
       ...updatedTransaction,
       dueDate: updatedTransaction.type === 'sale' ? new Date(new Date(updatedTransaction.date).getTime() + (updatedTransaction.creditDays || 0) * 24 * 60 * 60 * 1000).toISOString() : null,
      };
-     recalculateBalances(updatedTransaction.customerId);
+     recalculateBalances(updatedTransaction.customerId); // this also writes to DB
      const finalTransaction = DB.transactions.find(t => t.id === updatedTransaction.id)!;
      return JSON.parse(JSON.stringify(finalTransaction));
   }
@@ -272,11 +318,12 @@ export const updateTransaction = (updatedTransaction: Omit<Transaction, 'balance
 }
 
 export const deleteTransaction = (id: string): void => {
+  DB = readDb();
   const index = DB.transactions.findIndex(t => t.id === id);
   if (index !== -1) {
     const customerId = DB.transactions[index].customerId;
     DB.transactions.splice(index, 1);
-    recalculateBalances(customerId);
+    recalculateBalances(customerId); // this also writes to DB
   } else {
     throw new Error("Transaction not found");
   }
