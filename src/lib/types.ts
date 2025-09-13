@@ -22,3 +22,10 @@ export type Transaction = {
   balanceAfter: number;
   status: "paid" | "due" | "overdue";
 };
+
+export type User = {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+};

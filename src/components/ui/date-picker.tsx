@@ -17,9 +17,10 @@ import {
 interface DatePickerProps {
   value: Date;
   onChange: (date: Date) => void;
+  disabled?: boolean;
 }
 
-export function DatePicker({ value, onChange }: DatePickerProps) {
+export function DatePicker({ value, onChange, disabled }: DatePickerProps) {
   const handleSelect = (date: Date | undefined) => {
     if (date) {
       onChange(date);
@@ -34,6 +35,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
             "w-full justify-start text-left font-normal",
             !value && "text-muted-foreground"
           )}
+          disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
           {value ? format(value, "PPP") : <span>Pick a date</span>}

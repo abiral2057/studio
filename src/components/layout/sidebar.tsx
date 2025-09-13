@@ -7,10 +7,12 @@ import {
   Users,
   BarChart3,
   Settings,
+  LogOut,
 } from "lucide-react";
 import { AppLogo } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -20,6 +22,11 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   const navContent = (
     <>
@@ -53,6 +60,10 @@ export function Sidebar() {
             <span>Settings</span>
           </Button>
         </Link>
+        <Button variant="ghost" className="w-full justify-start gap-3 text-destructive hover:text-destructive" onClick={handleLogout}>
+          <LogOut className="h-5 w-5" />
+          <span>Logout</span>
+        </Button>
       </div>
     </>
   );
