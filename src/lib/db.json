@@ -54,6 +54,17 @@
       "outstandingBalance": 42000,
       "defaultCreditDays": 20,
       "createdAt": "2023-05-01T16:45:00Z"
+    },
+    {
+      "customerId": "CUST-CXNR2",
+      "name": "Abiral Shrestha",
+      "phone": "9816232444",
+      "address": "Parsa",
+      "creditLimit": 0,
+      "defaultCreditDays": 0,
+      "id": "CUST-1757767992447",
+      "outstandingBalance": 0,
+      "createdAt": "2025-09-13T12:53:12.447Z"
     }
   ],
   "transactions": [
@@ -152,6 +163,30 @@
       "dueDate": "2024-04-30T09:00:00Z",
       "balanceAfter": 42000,
       "status": "due"
+    },
+    {
+      "customerId": "CUST-1757767992447",
+      "date": "2025-09-13T12:53:19.864Z",
+      "type": "sale",
+      "amount": 2000,
+      "description": "adad",
+      "creditDays": 0,
+      "id": "TXN-1757768009824-aht1e",
+      "balanceAfter": 2000,
+      "dueDate": "2025-09-13T12:53:19.864Z",
+      "status": "due"
+    },
+    {
+      "customerId": "CUST-1757767992447",
+      "date": "2025-09-13T12:53:29.451Z",
+      "type": "payment",
+      "amount": 2000,
+      "description": "adad",
+      "creditDays": null,
+      "id": "TXN-1757768024101-ykgxu",
+      "balanceAfter": 0,
+      "dueDate": null,
+      "status": "paid"
     }
   ]
 }

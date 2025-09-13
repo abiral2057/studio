@@ -12,7 +12,7 @@ interface HeaderProps {
 
 export function Header({ title, actionButton }: HeaderProps) {
   return (
-    <header className="bg-card/80 backdrop-blur-sm sticky top-0 z-10 border-b p-4">
+    <header className="bg-card/80 backdrop-blur-sm sticky top-0 z-10 border-b p-4 md:bg-transparent md:backdrop-blur-none md:static md:border-none md:p-0">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         {actionButton && (

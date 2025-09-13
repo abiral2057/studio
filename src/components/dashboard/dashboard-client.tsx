@@ -4,6 +4,7 @@ import type { Customer, Transaction } from "@/lib/types";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -26,6 +27,20 @@ import Link from "next/link";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "../ui/button";
 import { Header } from "@/components/layout/header";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  ResponsiveContainer,
+  Tooltip,
+} from "recharts";
+import type { ChartConfig } from "@/components/ui/chart";
 
 interface DashboardClientProps {
   customers: Customer[];
@@ -43,6 +58,21 @@ export function DashboardClient({
   const customersWithBalance = customers
     .filter((c) => c.outstandingBalance > 0)
     .sort((a, b) => b.outstandingBalance - a.outstandingBalance);
+
+  const topCustomers = customersWithBalance.slice(0, 5);
+
+  const chartData = topCustomers.map(c => ({
+    name: c.name.split(' ')[0], // Use first name for brevity
+    balance: c.outstandingBalance,
+  }));
+  
+  const chartConfig = {
+    balance: {
+      label: "Balance",
+      color: "hsl(var(--primary))",
+    },
+  } satisfies ChartConfig;
+
 
   const overdueTransactions = transactions.filter(
     (t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "paid"
@@ -95,6 +125,43 @@ export function DashboardClient({
             </CardContent>
           </Card>
         </div>
+        
+        {chartData.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Top 5 Outstanding Balances</CardTitle>
+              <CardDescription>
+                Highest outstanding balances by customer.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                <BarChart accessibilityLayer data={chartData}>
+                  <XAxis
+                    dataKey="name"
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    tickFormatter={(value) => value.slice(0, 3)}
+                  />
+                  <YAxis
+                    tickFormatter={(value) => `₹${value / 1000}k`}
+                    tickLine={false}
+                    axisLine={false}
+                    tickMargin={8}
+                    width={80}
+                  />
+                  <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent indicator="dot" />}
+                  />
+                  <Bar dataKey="balance" fill="var(--color-balance)" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            </CardContent>
+          </Card>
+        )}
+
 
         {overdueTransactions.length > 0 && (
           <Alert variant="destructive">
@@ -139,7 +206,7 @@ export function DashboardClient({
                           <Badge variant="destructive">Overdue</Badge>
                         )}
                         {customer.outstandingBalance >
-                          customer.creditLimit && (
+                          customer.creditLimit && customer.creditLimit > 0 && (
                           <Badge variant="destructive" className="ml-1">
                             Limit
                           </Badge>

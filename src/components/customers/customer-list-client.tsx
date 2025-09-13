@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect, useTransition } from "react";
+import { useState, useMemo, useTransition } from "react";
 import type { Customer } from "@/lib/types";
 import {
   Table,
@@ -67,7 +67,7 @@ export function CustomerListClient({
   const handleAddCustomer = (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>) => {
     startTransition(async () => {
       const newCustomer = await addCustomer(newCustomerData);
-      setCustomers(prev => [...prev, newCustomer]);
+      setCustomers(prev => [...prev, newCustomer].sort((a, b) => a.name.localeCompare(b.name)));
       toast({ title: "Success", description: "Customer added." });
     });
   };
@@ -126,9 +126,9 @@ export function CustomerListClient({
   };
 
   return (
-    <div className="flex-1">
+    <div className="flex-1 p-4 md:p-6">
       <Header title="Customers" actionButton={{ label: "Add Customer", onClick: () => setIsAddCustomerSheetOpen(true) }} />
-      <div className="p-4 md:p-6">
+      <div className="mt-4 md:mt-6">
         <Card>
           <CardHeader>
             <div className="flex flex-col md:flex-row items-center gap-4">
