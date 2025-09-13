@@ -18,6 +18,17 @@
       "id": "CUST-1757767992447",
       "outstandingBalance": 2000,
       "createdAt": "2025-09-13T12:53:12.447Z"
+    },
+    {
+      "customerId": "CUST-AEJSQ",
+      "name": "abishekh",
+      "phone": "9183139",
+      "address": "parsa",
+      "creditLimit": 2000,
+      "defaultCreditDays": 0,
+      "id": "CUST-1757787113831",
+      "outstandingBalance": 0,
+      "createdAt": "2025-09-13T18:11:53.831Z"
     }
   ],
   "transactions": [
