@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { Customer, Transaction } from "@/lib/types";
@@ -31,15 +32,14 @@ import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
+  type ChartConfig
 } from "@/components/ui/chart";
 import {
   BarChart,
   Bar,
   XAxis,
   YAxis,
-  ResponsiveContainer,
 } from "recharts";
-import type { ChartConfig } from "@/components/ui/chart";
 
 interface DashboardClientProps {
   customers: Customer[];
@@ -134,8 +134,8 @@ export function DashboardClient({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
+             <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                <BarChart accessibilityLayer data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                   <XAxis
                     dataKey="name"
                     tickLine={false}
@@ -157,7 +157,7 @@ export function DashboardClient({
                   />
                   <Bar dataKey="balance" fill="var(--color-balance)" radius={4} />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         )}
