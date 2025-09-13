@@ -30,6 +30,7 @@ const formSchema = z.object({
   address: z.string().optional(),
   creditLimit: z.coerce.number().int().min(0).optional(),
   defaultCreditDays: z.coerce.number().int().min(0).optional(),
+  customerId: z.string().min(1, "Customer ID is required."),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -37,7 +38,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddCustomerSheetProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onAddCustomer: (customer: Customer) => void;
+  onAddCustomer: (customer: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>) => void;
 }
 
 export function AddCustomerSheet({
@@ -53,24 +54,27 @@ export function AddCustomerSheet({
       address: "",
       creditLimit: 0,
       defaultCreditDays: 0,
+      customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
     },
   });
 
   const onSubmit = (values: FormValues) => {
-    const newCustomer: Customer = {
-      id: new Date().toISOString(),
-      customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+    onAddCustomer({
+      customerId: values.customerId,
       name: values.name,
       phone: values.phone,
       address: values.address || "",
       creditLimit: values.creditLimit || 0,
-      outstandingBalance: 0,
       defaultCreditDays: values.defaultCreditDays || 0,
-      createdAt: new Date().toISOString(),
-    };
-
-    onAddCustomer(newCustomer);
-    form.reset();
+    });
+    form.reset({
+      name: "",
+      phone: "",
+      address: "",
+      creditLimit: 0,
+      defaultCreditDays: 0,
+      customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
+    });
     setIsOpen(false);
   };
 
@@ -85,6 +89,19 @@ export function AddCustomerSheet({
         </SheetHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col flex-1 space-y-4 overflow-y-auto pr-6">
+            <FormField
+              control={form.control}
+              name="customerId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Customer ID</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., CUST-123" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="name"

@@ -36,7 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CalendarIcon, Sparkles } from "lucide-react";
 import { format } from "date-fns";
-import type { Customer, Transaction } from "@/lib/types";
+import type { Customer } from "@/lib/types";
 import { suggestDescriptionAction } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 
@@ -54,7 +54,14 @@ interface AddTransactionSheetProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   customer: Customer;
-  onAddTransaction: (transaction: Transaction) => void;
+  onAddTransaction: (transactionData: {
+    customerId: string,
+    date: string,
+    type: 'sale' | 'payment',
+    amount: number,
+    description: string,
+    creditDays: number | null
+  }) => void;
 }
 
 export function AddTransactionSheet({
@@ -78,24 +85,21 @@ export function AddTransactionSheet({
   });
 
   const onSubmit = (values: FormValues) => {
-    const amount = values.type === 'sale' ? values.amount : -values.amount;
-    const newBalance = customer.outstandingBalance + amount;
-
-    const newTransaction: Transaction = {
-      id: new Date().toISOString(), // Temporary ID
+    onAddTransaction({
       customerId: customer.id,
       date: values.date.toISOString(),
       type: values.type,
       amount: values.amount,
       description: values.description,
       creditDays: values.type === 'sale' ? values.creditDays || 0 : null,
-      dueDate: values.type === 'sale' ? new Date(values.date.getTime() + (values.creditDays || 0) * 24 * 60 * 60 * 1000).toISOString() : null,
-      balanceAfter: newBalance,
-      status: values.type === 'payment' ? 'paid' : 'due',
-    };
-
-    onAddTransaction(newTransaction);
-    form.reset();
+    });
+    form.reset({
+      date: new Date(),
+      type: "sale",
+      amount: undefined,
+      description: "",
+      creditDays: customer.defaultCreditDays,
+    });
     setIsOpen(false);
   };
   

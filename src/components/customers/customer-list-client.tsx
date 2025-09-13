@@ -30,7 +30,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AddCustomerSheet } from "./add-customer-sheet";
-import { getCustomers, saveCustomers } from "@/lib/data";
+import { addCustomer, getCustomers } from "@/lib/data";
 
 interface CustomerListClientProps {
   customers: Customer[];
@@ -44,14 +44,13 @@ export function CustomerListClient({
   const [customers, setCustomers] = useState(initialCustomers);
   const [isAddCustomerSheetOpen, setIsAddCustomerSheetOpen] = useState(false);
 
-  useEffect(() => {
-    // This could be used to refetch data if it was coming from an API
-  }, [customers]);
+  const refreshCustomers = () => {
+    setCustomers(getCustomers());
+  };
 
-  const handleAddCustomer = (newCustomer: Customer) => {
-    const updatedCustomers = [...customers, newCustomer];
-    setCustomers(updatedCustomers);
-    saveCustomers(updatedCustomers); // Persist to our mock DB
+  const handleAddCustomer = (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>) => {
+    addCustomer(newCustomerData);
+    refreshCustomers(); 
   };
 
   const filteredCustomers = useMemo(() => {

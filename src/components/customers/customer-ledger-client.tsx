@@ -36,7 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
-import { getTransactions, saveTransactions, updateCustomer } from "@/lib/data";
+import { addTransaction, getCustomerById, getTransactionsByCustomerId } from "@/lib/data";
 
 interface CustomerLedgerClientProps {
   customer: Customer;
@@ -51,21 +51,21 @@ export function CustomerLedgerClient({
   const [transactions, setTransactions] = useState(initialTransactions);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-  const handleAddTransaction = (newTransaction: Transaction) => {
-    // In a real app, this would be an API call. Here we simulate the update.
-    const allTransactions = getTransactions();
-    const updatedTransactions = [...allTransactions, newTransaction];
-    saveTransactions(updatedTransactions);
-
-    setTransactions((prev) =>
-      [...prev, newTransaction].sort(
-        (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-      )
-    );
-    
-    const updatedCustomer = { ...customer, outstandingBalance: newTransaction.balanceAfter };
-    setCustomer(updatedCustomer);
-    updateCustomer(updatedCustomer);
+  const refreshData = () => {
+    setCustomer(getCustomerById(initialCustomer.id)!);
+    setTransactions(getTransactionsByCustomerId(initialCustomer.id));
+  };
+  
+  const handleAddTransaction = (transactionData:  {
+    customerId: string,
+    date: string,
+    type: 'sale' | 'payment',
+    amount: number,
+    description: string,
+    creditDays: number | null
+  }) => {
+    addTransaction(transactionData);
+    refreshData();
   };
 
   const formatCurrency = (amount: number) => {
