@@ -4,25 +4,25 @@
 
 @layer base {
   :root {
-    --background: 210 100% 97.1%; /* #F0F8FF */
+    --background: 220 20% 97%;
     --foreground: 224 71% 4%;
 
-    --card: 210 100% 100%;
+    --card: 220 20% 100%;
     --card-foreground: 224 71% 4%;
 
-    --popover: 210 100% 100%;
+    --popover: 220 20% 100%;
     --popover-foreground: 224 71% 4%;
 
-    --primary: 33 100% 64.3%; /* #FFB347 */
-    --primary-foreground: 24 9.8% 10%;
+    --primary: 262.1 83.3% 57.8%;
+    --primary-foreground: 210 20% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 220 14.3% 95.9%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted: 210 40% 96.1%;
+    --muted: 220 14.3% 95.9%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 216 100% 81.4%; /* #A0C4FF */
+    --accent: 220 14.3% 95.9%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -31,18 +31,11 @@
     --success: 142.1 76.2% 36.3%;
     --success-foreground: 142.1 76.2% 96.3%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 33 100% 64.3%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 262.1 83.3% 57.8%;
 
-    --radius: 0.5rem;
-
-    --sidebar-background: 210 100% 99%;
-    --sidebar-foreground: 224 71% 4%;
-    --sidebar-border: 214.3 31.8% 91.4%;
-    --sidebar-accent: 216 100% 81.4%;
-    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
-    --sidebar-ring: 33 100% 64.3%;
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -55,8 +48,8 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 33 100% 64.3%;
-    --primary-foreground: 24 9.8% 10%;
+    --primary: 263.4 95.2% 58.2%;
+    --primary-foreground: 210 20% 98%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -75,14 +68,7 @@
 
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 33 100% 64.3%;
-
-    --sidebar-background: 222.2 84% 4.9%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-accent: 217.2 32.6% 27.5%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-ring: 33 100% 64.3%;
+    --ring: 263.4 95.2% 58.2%;
   }
 }
 

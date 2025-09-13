@@ -29,8 +29,8 @@ export function Sidebar() {
           <span className="text-xl font-bold tracking-tight">KhaataBook</span>
         </Link>
       </div>
-      <nav className="flex-1 px-4">
-        <ul className="space-y-2">
+      <nav className="flex-1 px-2">
+        <ul className="space-y-1">
           {navItems.map((item) => (
             <li key={item.href}>
               <Link href={item.href}>
@@ -46,7 +46,7 @@ export function Sidebar() {
           ))}
         </ul>
       </nav>
-      <div className="p-4 mt-auto">
+      <div className="p-2 mt-auto">
         <Link href="/settings">
           <Button variant={pathname === "/settings" ? "secondary" : "ghost"} className="w-full justify-start gap-3">
             <Settings className="h-5 w-5" />
