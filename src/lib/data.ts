@@ -1,16 +1,27 @@
-import type { Customer, Transaction } from "@/lib/types";
+import type { Customer, Transaction, User } from "@/lib/types";
 import fs from "fs";
 import path from "path";
 
 // Use a JSON file for simple, persistent storage.
 const dbPath = path.join(process.cwd(), 'src', 'lib', 'db.json');
 
+type UserWithPassword = User & { passwordHash: string };
+
 type DbData = {
+  user: UserWithPassword;
   customers: Customer[];
   transactions: Transaction[];
 }
 
 const initialData: DbData = {
+  user: {
+    id: '1',
+    name: 'Abiral Shrestha',
+    username: 'abiral@admin',
+    email: 'abiral.shrestha72@gmail.com',
+    passwordHash: 'BaqCjyjSpU2HQ8yC', // This should be a securely hashed password
+    avatarUrl: `https://i.pravatar.cc/150?u=abiral.shrestha72@gmail.com`,
+  },
   customers: [
     {
       id: "1",
@@ -183,7 +194,13 @@ export const readDb = (): DbData => {
     if (fs.existsSync(dbPath)) {
       const fileContent = fs.readFileSync(dbPath, 'utf-8');
       if (fileContent) {
-        return JSON.parse(fileContent);
+        const data = JSON.parse(fileContent);
+        // Ensure user object exists, if not, add it from initialData
+        if (!data.user) {
+          data.user = initialData.user;
+          writeDb(data); // Write back to file with user
+        }
+        return data;
       }
     }
     fs.writeFileSync(dbPath, JSON.stringify(initialData, null, 2));
@@ -224,3 +241,8 @@ export const getTransactionsByCustomerId = (customerId: string): Transaction[] =
     .filter((t) => t.customerId === customerId)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
+
+export const getUser = (): UserWithPassword | null => {
+  const db = readDb();
+  return db.user || null;
+}

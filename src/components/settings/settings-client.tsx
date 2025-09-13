@@ -1,12 +1,12 @@
 
 "use client";
 
-import { useTransition } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Header } from "@/components/layout/header";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Form,
@@ -18,11 +18,13 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogOut } from "lucide-react";
+import { Loader2, LogOut, Pencil } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { changePassword } from "@/lib/auth-actions";
+import { changePassword, logout } from "@/lib/auth-actions";
 import { type User } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
+import { EditProfileSheet } from "./edit-profile-sheet";
+import { updateUser } from "@/lib/actions";
 
 interface SettingsClientProps {
   user: User;
@@ -41,8 +43,9 @@ type PasswordFormValues = z.infer<typeof passwordFormSchema>;
 
 export function SettingsClient({ user }: SettingsClientProps) {
   const { toast } = useToast();
-  const { logout } = useAuth();
+  const { logout: authLogout } = useAuth();
   const [isPending, startTransition] = useTransition();
+  const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordFormSchema),
@@ -60,6 +63,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
         if (result.success) {
           toast({ title: "Success", description: "Your password has been changed. You will be logged out." });
           form.reset();
+          await authLogout(); // Use logout from context which handles redirect
         } else {
           toast({
             variant: "destructive",
@@ -78,8 +82,25 @@ export function SettingsClient({ user }: SettingsClientProps) {
   };
 
   const handleLogout = async () => {
-    await logout();
+    await authLogout();
   };
+  
+  const handleUpdateProfile = async (values: { name: string; avatarUrl: string }) => {
+    startTransition(async () => {
+      const result = await updateUser(values);
+       if (result.success) {
+        toast({ title: "Success", description: "Profile updated successfully." });
+        setIsEditSheetOpen(false);
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: result.error || "An unexpected error occurred.",
+        });
+      }
+    });
+  };
+
 
   return (
     <div className="flex-1 p-2 sm:p-4 md:p-6">
@@ -93,7 +114,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
           <CardContent>
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                 <AvatarImage src={`https://i.pravatar.cc/150?u=${user.email}`} alt={user.name} />
+                 <AvatarImage src={user.avatarUrl} alt={user.name} />
                 <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="grid gap-1">
@@ -103,6 +124,12 @@ export function SettingsClient({ user }: SettingsClientProps) {
               </div>
             </div>
           </CardContent>
+          <CardFooter>
+            <Button variant="outline" onClick={() => setIsEditSheetOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Profile
+            </Button>
+          </CardFooter>
         </Card>
         
         <Card>
@@ -174,6 +201,13 @@ export function SettingsClient({ user }: SettingsClientProps) {
           </CardContent>
         </Card>
       </div>
+      <EditProfileSheet 
+        isOpen={isEditSheetOpen}
+        setIsOpen={setIsEditSheetOpen}
+        user={user}
+        onUpdateProfile={handleUpdateProfile}
+        isPending={isPending}
+      />
     </div>
   );
 }

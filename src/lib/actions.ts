@@ -4,8 +4,9 @@ import {
   getSmartTransactionDescription,
   type SmartTransactionDescriptionInput,
 } from '@/ai/flows/smart-transaction-descriptions';
-import type { Customer, Transaction } from '@/lib/types';
-import { readDb, writeDb, getCustomerById as getCustomerByIdData, getTransactionsByCustomerId as getTransactionsByCustomerIdData, getCustomers as getCustomersData } from '@/lib/data';
+import type { Customer, Transaction, User } from '@/lib/types';
+import { readDb, writeDb, getCustomerById as getCustomerByIdData, getTransactionsByCustomerId as getTransactionsByCustomerIdData, getCustomers as getCustomersData, getUser as getUserData } from '@/lib/data';
+import { revalidatePath } from 'next/cache';
 
 export async function suggestDescriptionAction(
   input: SmartTransactionDescriptionInput
@@ -142,4 +143,26 @@ export async function getTransactionsByCustomerId(customerId: string): Promise<T
 
 export async function getCustomers(): Promise<Customer[]> {
     return getCustomersData();
+}
+
+export async function updateUser(userData: { name: string; avatarUrl: string; }): Promise<{ success: boolean; error?: string }>{
+  try {
+    const db = readDb();
+    const user = db.user;
+    if (user) {
+      user.name = userData.name;
+      user.avatarUrl = userData.avatarUrl;
+      writeDb(db);
+      revalidatePath('/settings');
+      return { success: true };
+    }
+    return { success: false, error: 'User not found' };
+  } catch (error) {
+    console.error("Failed to update user", error);
+    return { success: false, error: 'Failed to update user' };
+  }
+}
+
+export async function getUser(): Promise<User | null> {
+  return getUserData();
 }
