@@ -165,7 +165,7 @@ export function CustomerListClient({
                     <TableHead>Name</TableHead>
                     <TableHead className="hidden md:table-cell">Phone</TableHead>
                     <TableHead className="text-right">Balance</TableHead>
-                    <TableHead className="w-[50px] sm:w-[80px] text-right">Actions</TableHead>
+                    <TableHead className="w-[50px] text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -238,7 +238,7 @@ export function CustomerListClient({
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-24 text-center">
+                      <TableCell colSpan={4} className="h-24 text-center">
                         No customers found.
                       </TableCell>
                     </TableRow>
@@ -274,3 +274,4 @@ export function CustomerListClient({
     </div>
   );
 }
+

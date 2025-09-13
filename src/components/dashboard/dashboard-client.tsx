@@ -186,23 +186,23 @@ export function DashboardClient({
                   <TableHead>Customer</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
                   <TableHead className="hidden sm:table-cell">Status</TableHead>
-                  <TableHead className="text-right">View</TableHead>
+                  <TableHead className="text-right w-[50px]">View</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {customersWithBalance.length > 0 ? (
                   customersWithBalance.map((customer) => (
                     <TableRow key={customer.id}>
-                      <TableCell className="pr-2">
-                        <div className="font-medium truncate max-w-[150px] sm:max-w-xs">{customer.name}</div>
+                      <TableCell className="pr-1 sm:pr-2">
+                        <div className="font-medium truncate max-w-[120px] sm:max-w-xs">{customer.name}</div>
                         <div className="text-sm text-muted-foreground">
                           {customer.customerId}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-mono px-2">
+                      <TableCell className="text-right font-mono px-1 sm:px-2">
                         {formatCurrency(customer.outstandingBalance)}
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell px-2">
+                      <TableCell className="hidden sm:table-cell px-1 sm:px-2">
                         <div className="flex flex-col items-start gap-1">
                           {overdueCustomerIds.has(customer.id) && (
                             <Badge variant="destructive">Overdue</Badge>
@@ -215,7 +215,7 @@ export function DashboardClient({
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right pl-2">
+                      <TableCell className="text-right pl-1 sm:pl-2">
                         <Button variant="ghost" size="icon" asChild>
                           <Link href={`/customers/${customer.id}`}>
                             <ArrowRight className="h-4 w-4" />
@@ -239,3 +239,4 @@ export function DashboardClient({
     </div>
   );
 }
+
