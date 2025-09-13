@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,13 +18,14 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, LogOut, Pencil } from "lucide-react";
+import { Loader2, LogOut, Pencil, HardDrive } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { changePassword, logout } from "@/lib/auth-actions";
+import { changePassword } from "@/lib/auth-actions";
 import { type User } from "@/lib/types";
 import { useAuth } from "@/hooks/use-auth";
 import { EditProfileSheet } from "./edit-profile-sheet";
 import { updateUser } from "@/lib/actions";
+import { Progress } from "@/components/ui/progress";
 
 interface SettingsClientProps {
   user: User;
@@ -46,6 +47,15 @@ export function SettingsClient({ user }: SettingsClientProps) {
   const { logout: authLogout } = useAuth();
   const [isPending, startTransition] = useTransition();
   const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
+  const [storage, setStorage] = useState<{usage: number, quota: number} | null>(null);
+
+  useEffect(() => {
+    if (navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(({usage, quota}) => {
+        setStorage({ usage: usage || 0, quota: quota || 0 });
+      });
+    }
+  }, []);
 
   const form = useForm<PasswordFormValues>({
     resolver: zodResolver(passwordFormSchema),
@@ -101,6 +111,19 @@ export function SettingsClient({ user }: SettingsClientProps) {
     });
   };
 
+  const formatBytes = (bytes: number, decimals = 2) => {
+    if (!+bytes) return '0 Bytes'
+
+    const k = 1024
+    const dm = decimals < 0 ? 0 : decimals
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB']
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
+  }
+
+  const usagePercentage = storage ? (storage.usage / storage.quota) * 100 : 0;
 
   return (
     <div className="flex-1 p-2 sm:p-4 md:p-6">
@@ -132,6 +155,27 @@ export function SettingsClient({ user }: SettingsClientProps) {
           </CardFooter>
         </Card>
         
+        {storage && storage.quota > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Storage</CardTitle>
+              <CardDescription>Local storage capacity used by the application.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-4">
+                <HardDrive className="w-10 h-10 text-muted-foreground" />
+                <div className="w-full">
+                  <Progress value={usagePercentage} className="w-full" />
+                  <div className="text-sm text-muted-foreground mt-2 flex justify-between">
+                    <span>{formatBytes(storage.usage)} used</span>
+                    <span>{formatBytes(storage.quota)} total</span>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card>
           <CardHeader>
             <CardTitle>Change Password</CardTitle>

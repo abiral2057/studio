@@ -4,32 +4,10 @@
     "name": "Abiral Shrestha",
     "username": "abiral@admin",
     "email": "abiral.shrestha72@gmail.com",
-    "passwordHash": "BaqCjyjSpU2HQ8yC",
+    "passwordHash": "12345678",
     "avatarUrl": "https://abiral.netlify.app/profile.jpg"
   },
   "customers": [
-    {
-      "id": "1",
-      "customerId": "CUST-001",
-      "name": "Aarav Sharma",
-      "phone": "9876543210",
-      "address": "123 Main St, Kathmandu",
-      "creditLimit": 50000,
-      "outstandingBalance": 15500,
-      "defaultCreditDays": 30,
-      "createdAt": "2023-01-15T10:00:00Z"
-    },
-    {
-      "id": "4",
-      "customerId": "CUST-004",
-      "name": "Dolma Sherpa",
-      "phone": "9876543213",
-      "address": "101 Mountain View, Lukla",
-      "creditLimit": 10000,
-      "outstandingBalance": 0,
-      "defaultCreditDays": 0,
-      "createdAt": "2023-04-05T14:00:00Z"
-    },
     {
       "customerId": "CUST-CXNR2",
       "name": "Abiral Shrestha",
@@ -43,42 +21,6 @@
     }
   ],
   "transactions": [
-    {
-      "id": "t1",
-      "customerId": "1",
-      "date": "2023-10-01T10:00:00Z",
-      "type": "sale",
-      "amount": 10000,
-      "description": "Initial stock purchase",
-      "creditDays": 30,
-      "dueDate": "2023-10-31T10:00:00Z",
-      "balanceAfter": 10000,
-      "status": "due"
-    },
-    {
-      "id": "t2",
-      "customerId": "1",
-      "date": "2023-10-15T12:00:00Z",
-      "type": "sale",
-      "amount": 7500,
-      "description": "Follow-up order",
-      "creditDays": 30,
-      "dueDate": "2023-11-14T12:00:00Z",
-      "balanceAfter": 17500,
-      "status": "due"
-    },
-    {
-      "id": "t3",
-      "customerId": "1",
-      "date": "2023-11-05T09:30:00Z",
-      "type": "payment",
-      "amount": 2000,
-      "description": "Partial payment",
-      "creditDays": null,
-      "dueDate": null,
-      "balanceAfter": 15500,
-      "status": "paid"
-    },
     {
       "customerId": "CUST-1757767992447",
       "date": "2025-09-13T12:53:19.864Z",
