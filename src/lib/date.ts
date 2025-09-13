@@ -9,7 +9,9 @@ export const formatLedgerDate = (dateString: string) => {
     timeZone: "UTC",
   });
   
-  const nepaliDate = new NepaliDate(date);
+  // By creating the NepaliDate from UTC components, we avoid timezone-related hydration errors.
+  const utcDate = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
+  const nepaliDate = new NepaliDate(utcDate);
   const nepaliDateString = nepaliDate.format("DD MMMM, YYYY", "np");
 
   return {
