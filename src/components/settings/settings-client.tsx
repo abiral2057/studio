@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useTransition } from "react";
@@ -57,7 +58,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
       try {
         const result = await changePassword(values);
         if (result.success) {
-          toast({ title: "Success", description: "Your password has been changed." });
+          toast({ title: "Success", description: "Your password has been changed. You will be logged out." });
           form.reset();
         } else {
           toast({
