@@ -28,6 +28,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { AddCustomerSheet } from "./add-customer-sheet";
 
 interface CustomerListClientProps {
   customers: Customer[];
@@ -38,9 +39,15 @@ export function CustomerListClient({
 }: CustomerListClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState("all");
+  const [customers, setCustomers] = useState(initialCustomers);
+  const [isAddCustomerSheetOpen, setIsAddCustomerSheetOpen] = useState(false);
+
+  const handleAddCustomer = (newCustomer: Customer) => {
+    setCustomers((prevCustomers) => [...prevCustomers, newCustomer]);
+  };
 
   const filteredCustomers = useMemo(() => {
-    return initialCustomers
+    return customers
       .filter((customer) => {
         if (filter === "overdue") {
           // This is a simplified logic. In a real app, you'd check transaction due dates.
@@ -55,7 +62,7 @@ export function CustomerListClient({
         customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         customer.customerId.toLowerCase().includes(searchTerm.toLowerCase())
       );
-  }, [initialCustomers, searchTerm, filter]);
+  }, [customers, searchTerm, filter]);
   
   const getInitials = (name: string) => {
     const names = name.split(" ");
@@ -75,7 +82,7 @@ export function CustomerListClient({
 
   return (
     <div className="flex-1">
-      <Header title="Customers" actionButton={{ label: "Add Customer", onClick: () => {} }} />
+      <Header title="Customers" actionButton={{ label: "Add Customer", onClick: () => setIsAddCustomerSheetOpen(true) }} />
       <div className="p-4 md:p-6">
         <Card>
           <CardHeader>
@@ -152,6 +159,11 @@ export function CustomerListClient({
           </CardContent>
         </Card>
       </div>
+       <AddCustomerSheet
+        isOpen={isAddCustomerSheetOpen}
+        setIsOpen={setIsAddCustomerSheetOpen}
+        onAddCustomer={handleAddCustomer}
+      />
     </div>
   );
 }
