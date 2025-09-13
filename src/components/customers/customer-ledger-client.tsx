@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -21,7 +22,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
-  CircleDollarSign,
   FilePenLine,
   Plus,
   Receipt,
@@ -36,6 +36,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
+import { getTransactions, saveTransactions, updateCustomer } from "@/lib/data";
 
 interface CustomerLedgerClientProps {
   customer: Customer;
@@ -52,13 +53,19 @@ export function CustomerLedgerClient({
 
   const handleAddTransaction = (newTransaction: Transaction) => {
     // In a real app, this would be an API call. Here we simulate the update.
+    const allTransactions = getTransactions();
+    const updatedTransactions = [...allTransactions, newTransaction];
+    saveTransactions(updatedTransactions);
+
     setTransactions((prev) =>
       [...prev, newTransaction].sort(
         (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
       )
     );
-    // Recalculate balance
-    setCustomer(prev => ({ ...prev, outstandingBalance: newTransaction.balanceAfter }));
+    
+    const updatedCustomer = { ...customer, outstandingBalance: newTransaction.balanceAfter };
+    setCustomer(updatedCustomer);
+    updateCustomer(updatedCustomer);
   };
 
   const formatCurrency = (amount: number) => {

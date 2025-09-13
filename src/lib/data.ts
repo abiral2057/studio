@@ -1,6 +1,7 @@
+
 import type { Customer, Transaction } from "@/lib/types";
 
-const customers: Customer[] = [
+let customers: Customer[] = [
   {
     id: "1",
     customerId: "CUST-001",
@@ -58,7 +59,7 @@ const customers: Customer[] = [
   },
 ];
 
-const transactions: Transaction[] = [
+let transactions: Transaction[] = [
   // Transactions for Aarav Sharma (CUST-001)
   {
     id: "t1",
@@ -164,11 +165,39 @@ const transactions: Transaction[] = [
   },
 ];
 
-export const getCustomers = () => customers;
-export const getCustomerById = (id: string) =>
-  customers.find((c) => c.id === id);
-export const getTransactions = () => transactions;
-export const getTransactionsByCustomerId = (customerId: string) =>
-  transactions
+// In-memory "database" to simulate persistence during user session.
+// This will reset on server restart.
+
+export const getCustomers = (): Customer[] => {
+  return JSON.parse(JSON.stringify(customers));
+};
+
+export const getCustomerById = (id: string): Customer | undefined => {
+  const customer = customers.find((c) => c.id === id);
+  return customer ? JSON.parse(JSON.stringify(customer)) : undefined;
+};
+
+export const saveCustomers = (newCustomers: Customer[]) => {
+  customers = JSON.parse(JSON.stringify(newCustomers));
+};
+
+export const updateCustomer = (updatedCustomer: Customer) => {
+  const index = customers.findIndex(c => c.id === updatedCustomer.id);
+  if (index !== -1) {
+    customers[index] = JSON.parse(JSON.stringify(updatedCustomer));
+  }
+};
+
+export const getTransactions = (): Transaction[] => {
+  return JSON.parse(JSON.stringify(transactions));
+};
+
+export const getTransactionsByCustomerId = (customerId: string): Transaction[] => {
+  return transactions
     .filter((t) => t.customerId === customerId)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+};
+
+export const saveTransactions = (newTransactions: Transaction[]) => {
+  transactions = JSON.parse(JSON.stringify(newTransactions));
+};

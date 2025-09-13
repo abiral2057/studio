@@ -1,6 +1,7 @@
+
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import type { Customer } from "@/lib/types";
 import {
   Table,
@@ -29,6 +30,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { AddCustomerSheet } from "./add-customer-sheet";
+import { getCustomers, saveCustomers } from "@/lib/data";
 
 interface CustomerListClientProps {
   customers: Customer[];
@@ -42,19 +44,24 @@ export function CustomerListClient({
   const [customers, setCustomers] = useState(initialCustomers);
   const [isAddCustomerSheetOpen, setIsAddCustomerSheetOpen] = useState(false);
 
+  useEffect(() => {
+    // This could be used to refetch data if it was coming from an API
+  }, [customers]);
+
   const handleAddCustomer = (newCustomer: Customer) => {
-    setCustomers((prevCustomers) => [...prevCustomers, newCustomer]);
+    const updatedCustomers = [...customers, newCustomer];
+    setCustomers(updatedCustomers);
+    saveCustomers(updatedCustomers); // Persist to our mock DB
   };
 
   const filteredCustomers = useMemo(() => {
     return customers
       .filter((customer) => {
         if (filter === "overdue") {
-          // This is a simplified logic. In a real app, you'd check transaction due dates.
           return customer.outstandingBalance > 0;
         }
         if (filter === "limitExceeded") {
-          return customer.outstandingBalance > customer.creditLimit;
+          return customer.outstandingBalance > customer.creditLimit && customer.creditLimit > 0;
         }
         return true;
       })
@@ -134,7 +141,7 @@ export function CustomerListClient({
                       </TableCell>
                       <TableCell className="hidden md:table-cell">{customer.phone}</TableCell>
                       <TableCell className="text-right font-mono">
-                        <span className={customer.outstandingBalance > 0 ? 'text-destructive' : 'text-success-foreground'}>
+                        <span className={customer.outstandingBalance > 0 ? 'text-destructive' : 'text-green-600'}>
                           {formatCurrency(customer.outstandingBalance)}
                         </span>
                       </TableCell>

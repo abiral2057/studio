@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -57,8 +58,8 @@ export function AddCustomerSheet({
 
   const onSubmit = (values: FormValues) => {
     const newCustomer: Customer = {
-      id: new Date().toISOString(), // Temporary ID
-      customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`, // Temp customer ID
+      id: new Date().toISOString(),
+      customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
       name: values.name,
       phone: values.phone,
       address: values.address || "",
