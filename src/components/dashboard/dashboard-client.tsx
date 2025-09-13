@@ -91,7 +91,7 @@ export function DashboardClient({
   return (
     <div className="flex-1">
       <Header title="Dashboard" />
-      <div className="p-4 md:p-6 space-y-4">
+      <div className="p-4 md:p-6 space-y-6">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -193,16 +193,16 @@ export function DashboardClient({
                 {customersWithBalance.length > 0 ? (
                   customersWithBalance.map((customer) => (
                     <TableRow key={customer.id}>
-                      <TableCell>
-                        <div className="font-medium truncate max-w-[120px] sm:max-w-xs">{customer.name}</div>
+                      <TableCell className="pr-2">
+                        <div className="font-medium truncate max-w-[150px] sm:max-w-xs">{customer.name}</div>
                         <div className="text-sm text-muted-foreground">
                           {customer.customerId}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-mono">
+                      <TableCell className="text-right font-mono px-2">
                         {formatCurrency(customer.outstandingBalance)}
                       </TableCell>
-                      <TableCell className="hidden sm:table-cell">
+                      <TableCell className="hidden sm:table-cell px-2">
                         <div className="flex flex-col items-start gap-1">
                           {overdueCustomerIds.has(customer.id) && (
                             <Badge variant="destructive">Overdue</Badge>
@@ -215,7 +215,7 @@ export function DashboardClient({
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right pl-2">
                         <Button variant="ghost" size="icon" asChild>
                           <Link href={`/customers/${customer.id}`}>
                             <ArrowRight className="h-4 w-4" />
