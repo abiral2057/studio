@@ -180,64 +180,64 @@ export function DashboardClient({
             <CardDescription>A list of customers with pending payments.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Customer</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="hidden sm:table-cell">Status</TableHead>
-                  <TableHead className="text-right w-[50px]">View</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customersWithBalance.length > 0 ? (
-                  customersWithBalance.map((customer) => (
-                    <TableRow key={customer.id}>
-                      <TableCell className="pr-1 sm:px-4">
-                        <div className="font-medium truncate max-w-[120px] sm:max-w-xs">{customer.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          {customer.customerId}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right font-mono px-1 sm:px-4">
-                        {formatCurrency(customer.outstandingBalance)}
-                      </TableCell>
-                      <TableCell className="hidden sm:table-cell px-1 sm:px-4">
-                        <div className="flex flex-col items-start gap-1">
-                          {overdueCustomerIds.has(customer.id) && (
-                            <Badge variant="destructive">Overdue</Badge>
-                          )}
-                          {customer.outstandingBalance >
-                            customer.creditLimit && customer.creditLimit > 0 && (
-                            <Badge variant="destructive">
-                              Limit
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right pl-1 sm:px-4">
-                        <Button variant="ghost" size="icon" asChild>
-                          <Link href={`/customers/${customer.id}`}>
-                            <ArrowRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Customer</TableHead>
+                    <TableHead className="text-right">Balance</TableHead>
+                    <TableHead className="hidden sm:table-cell">Status</TableHead>
+                    <TableHead className="text-right w-[50px]">View</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customersWithBalance.length > 0 ? (
+                    customersWithBalance.map((customer) => (
+                      <TableRow key={customer.id}>
+                        <TableCell>
+                          <div className="font-medium truncate max-w-[120px] sm:max-w-xs">{customer.name}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {customer.customerId}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatCurrency(customer.outstandingBalance)}
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">
+                          <div className="flex flex-col items-start gap-1">
+                            {overdueCustomerIds.has(customer.id) && (
+                              <Badge variant="destructive">Overdue</Badge>
+                            )}
+                            {customer.outstandingBalance >
+                              customer.creditLimit && customer.creditLimit > 0 && (
+                              <Badge variant="destructive">
+                                Limit
+                              </Badge>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="icon" asChild>
+                            <Link href={`/customers/${customer.id}`}>
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center">
+                        No outstanding balances.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="text-center">
-                      No outstanding balances.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
     </div>
   );
 }
-
-    

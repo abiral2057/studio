@@ -191,7 +191,7 @@ export function CustomerLedgerClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className={isPending ? "opacity-50" : ""}>
+            <div className={`${isPending ? "opacity-50" : ""} overflow-x-auto`}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -223,20 +223,20 @@ export function CustomerLedgerClient({
                   ) : transactions.length > 0 ? (
                     transactions.map((tx) => (
                       <TableRow key={tx.id}>
-                        <TableCell className="pr-1 sm:px-4">
+                        <TableCell>
                            <div className="font-medium truncate max-w-[140px] sm:max-w-xs">{tx.description}</div>
                            <div className="text-sm text-muted-foreground">{formatDate(tx.date)}</div>
                            {isOverdue(tx) && <Badge variant="destructive" className="mt-1">Overdue</Badge>}
                         </TableCell>
-                        <TableCell className="text-right px-1 sm:px-4">
+                        <TableCell className="text-right">
                            <div className={`font-mono font-semibold ${tx.type === 'sale' ? 'text-destructive' : 'text-green-600'}`}>
                             {formatCurrency(tx.amount)}
                           </div>
                         </TableCell>
-                        <TableCell className="text-right font-mono hidden md:table-cell px-1 sm:px-4">
+                        <TableCell className="text-right font-mono hidden md:table-cell">
                           {formatCurrency(tx.balanceAfter)}
                         </TableCell>
-                        <TableCell className="text-right pl-1 sm:px-4">
+                        <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" disabled={isPending}>
@@ -309,5 +309,3 @@ export function CustomerLedgerClient({
     </div>
   );
 }
-
-    

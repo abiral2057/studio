@@ -158,7 +158,7 @@ export function CustomerListClient({
             </div>
           </CardHeader>
           <CardContent>
-            <div className={isPending ? 'opacity-50' : ''}>
+            <div className={`${isPending ? 'opacity-50' : ''} overflow-x-auto`}>
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -195,7 +195,7 @@ export function CustomerListClient({
                   ) : filteredCustomers.length > 0 ? (
                     filteredCustomers.map((customer) => (
                       <TableRow key={customer.id}>
-                        <TableCell className="pr-1 sm:px-4">
+                        <TableCell>
                           <Link href={`/customers/${customer.id}`}>
                             <div className="flex items-center gap-3 hover:underline">
                               <Avatar>
@@ -210,13 +210,13 @@ export function CustomerListClient({
                             </div>
                           </Link>
                         </TableCell>
-                        <TableCell className="hidden md:table-cell px-1 sm:px-4">{customer.phone}</TableCell>
-                        <TableCell className="text-right font-mono px-1 sm:px-4">
+                        <TableCell className="hidden md:table-cell">{customer.phone}</TableCell>
+                        <TableCell className="text-right font-mono">
                           <span className={customer.outstandingBalance > 0 ? 'text-destructive' : 'text-green-600'}>
                             {formatCurrency(customer.outstandingBalance)}
                           </span>
                         </TableCell>
-                        <TableCell className="text-right pl-1 sm:px-4">
+                        <TableCell className="text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="ghost" size="icon" disabled={isPending}>
@@ -274,5 +274,3 @@ export function CustomerListClient({
     </div>
   );
 }
-
-    
