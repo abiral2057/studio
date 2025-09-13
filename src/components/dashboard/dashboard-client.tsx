@@ -38,7 +38,6 @@ import {
   XAxis,
   YAxis,
   ResponsiveContainer,
-  Tooltip,
 } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";
 
@@ -135,21 +134,22 @@ export function DashboardClient({
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-                <BarChart accessibilityLayer data={chartData}>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
                   <XAxis
                     dataKey="name"
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
-                    tickFormatter={(value) => value.slice(0, 3)}
+                    fontSize={12}
                   />
                   <YAxis
-                    tickFormatter={(value) => `₹${value / 1000}k`}
+                    tickFormatter={(value) => `₹${Number(value) / 1000}k`}
                     tickLine={false}
                     axisLine={false}
                     tickMargin={8}
-                    width={80}
+                    width={50}
+                    fontSize={12}
                   />
                   <ChartTooltip
                     cursor={false}
@@ -157,7 +157,7 @@ export function DashboardClient({
                   />
                   <Bar dataKey="balance" fill="var(--color-balance)" radius={4} />
                 </BarChart>
-              </ChartContainer>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         )}

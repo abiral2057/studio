@@ -47,10 +47,12 @@ export function Sidebar() {
         </ul>
       </nav>
       <div className="p-4 mt-auto">
-        <Button variant="ghost" className="w-full justify-start gap-3">
-          <Settings className="h-5 w-5" />
-          <span>Settings</span>
-        </Button>
+        <Link href="/settings">
+          <Button variant={pathname === "/settings" ? "secondary" : "ghost"} className="w-full justify-start gap-3">
+            <Settings className="h-5 w-5" />
+            <span>Settings</span>
+          </Button>
+        </Link>
       </div>
     </>
   );
