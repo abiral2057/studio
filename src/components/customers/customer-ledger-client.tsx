@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import type { Customer, Transaction } from "@/lib/types";
 import {
   Card,
@@ -35,7 +35,7 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
-import { addTransaction, getCustomerById, getTransactionsByCustomerId, deleteTransaction, updateTransaction } from "@/lib/data";
+import { addTransaction, deleteTransaction, updateTransaction, getCustomerById, getTransactionsByCustomerId } from "@/lib/actions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { EditTransactionSheet } from "./edit-transaction-sheet";
+import { useRouter } from "next/navigation";
 
 interface CustomerLedgerClientProps {
   customer: Customer;
@@ -65,42 +66,51 @@ export function CustomerLedgerClient({
   const [transactionToEdit, setTransactionToEdit] = useState<Transaction | null>(null);
   const [transactionToDelete, setTransactionToDelete] = useState<Transaction | null>(null);
   const { toast } = useToast();
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
   const refreshData = () => {
-    const freshCustomer = getCustomerById(initialCustomer.id);
-    if (freshCustomer) {
-      setCustomer(freshCustomer);
-      setTransactions(getTransactionsByCustomerId(initialCustomer.id));
-    }
+    startTransition(async () => {
+      const updatedCustomer = await getCustomerById(customer.id);
+      const updatedTransactions = await getTransactionsByCustomerId(customer.id);
+      if (updatedCustomer) setCustomer(updatedCustomer);
+      setTransactions(updatedTransactions);
+    });
   };
   
   const handleAddTransaction = (transactionData: Omit<Transaction, 'id' | 'balanceAfter' | 'status'>) => {
-    addTransaction(transactionData);
-    refreshData();
-    toast({ title: "Success", description: "Transaction added." });
+    startTransition(async () => {
+      await addTransaction(transactionData);
+      refreshData();
+      toast({ title: "Success", description: "Transaction added." });
+    });
   };
 
   const handleEditTransaction = (transactionData: Omit<Transaction, 'balanceAfter'>) => {
-    updateTransaction(transactionData);
-    refreshData();
-    toast({ title: "Success", description: "Transaction updated." });
+    startTransition(async () => {
+      await updateTransaction(transactionData);
+      refreshData();
+      toast({ title: "Success", description: "Transaction updated." });
+    });
   };
   
   const handleDeleteTransaction = () => {
     if(transactionToDelete) {
-      try {
-        deleteTransaction(transactionToDelete.id);
-        refreshData();
-        toast({ title: "Success", description: "Transaction deleted." });
-      } catch (e) {
-         toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to delete transaction.",
-        });
-      } finally {
-        setTransactionToDelete(null);
-      }
+      startTransition(async () => {
+        try {
+          await deleteTransaction(transactionToDelete.id);
+          refreshData();
+          toast({ title: "Success", description: "Transaction deleted." });
+        } catch (e) {
+           toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to delete transaction.",
+          });
+        } finally {
+          setTransactionToDelete(null);
+        }
+      });
     }
   };
 
@@ -173,73 +183,75 @@ export function CustomerLedgerClient({
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead className="text-right">Debit</TableHead>
-                  <TableHead className="text-right">Credit</TableHead>
-                  <TableHead className="text-right hidden md:table-cell">Balance</TableHead>
-                   <TableHead className="text-right"> </TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.length > 0 ? (
-                  transactions.map((tx) => (
-                    <TableRow key={tx.id}>
-                      <TableCell>
-                        <div className="font-medium">{formatDate(tx.date)}</div>
-                        {isOverdue(tx) && <Badge variant="destructive">Overdue</Badge>}
-                      </TableCell>
-                      <TableCell>
-                        <p className="truncate max-w-xs">{tx.description}</p>
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-destructive">
-                        {tx.type === "sale" ? formatCurrency(tx.amount) : "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-green-600">
-                        {tx.type === "payment"
-                          ? formatCurrency(tx.amount)
-                          : "-"}
-                      </TableCell>
-                      <TableCell className="text-right font-mono hidden md:table-cell">
-                        {formatCurrency(tx.balanceAfter)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => openEditSheet(tx)}>
-                              <FilePenLine className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onSelect={() => setTransactionToDelete(tx)}>
-                              <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+            <div className={isPending ? "opacity-50" : ""}>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead className="text-right">Debit</TableHead>
+                    <TableHead className="text-right">Credit</TableHead>
+                    <TableHead className="text-right hidden md:table-cell">Balance</TableHead>
+                     <TableHead className="text-right"> </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {transactions.length > 0 ? (
+                    transactions.map((tx) => (
+                      <TableRow key={tx.id}>
+                        <TableCell>
+                          <div className="font-medium">{formatDate(tx.date)}</div>
+                          {isOverdue(tx) && <Badge variant="destructive">Overdue</Badge>}
+                        </TableCell>
+                        <TableCell>
+                          <p className="truncate max-w-xs">{tx.description}</p>
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-destructive">
+                          {tx.type === "sale" ? formatCurrency(tx.amount) : "-"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-green-600">
+                          {tx.type === "payment"
+                            ? formatCurrency(tx.amount)
+                            : "-"}
+                        </TableCell>
+                        <TableCell className="text-right font-mono hidden md:table-cell">
+                          {formatCurrency(tx.balanceAfter)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onSelect={() => openEditSheet(tx)}>
+                                <FilePenLine className="mr-2 h-4 w-4" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onSelect={() => setTransactionToDelete(tx)}>
+                                <Trash2 className="mr-2 h-4 w-4" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={6} className="h-24 text-center">
+                        No transactions yet.
                       </TableCell>
                     </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
-                      No transactions yet.
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </main>
       <footer className="p-4 border-t sticky bottom-0 bg-background">
-        <Button className="w-full" size="lg" onClick={() => setIsAddSheetOpen(true)}>
-          <Plus className="mr-2 h-5 w-5" /> Add Transaction
+        <Button className="w-full" size="lg" onClick={() => setIsAddSheetOpen(true)} disabled={isPending}>
+          <Plus className="mr-2 h-5 w-5" /> {isPending ? 'Processing...' : 'Add Transaction'}
         </Button>
       </footer>
       <AddTransactionSheet

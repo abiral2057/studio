@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useTransition } from "react";
 import type { Customer } from "@/lib/types";
 import {
   Table,
@@ -18,7 +18,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Search, ArrowRight, MoreVertical, FilePenLine, Trash2 } from "lucide-react";
+import { Search, ArrowRight, MoreVertical, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Header } from "@/components/layout/header";
@@ -28,7 +28,7 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 import { AddCustomerSheet } from "./add-customer-sheet";
-import { addCustomer, getCustomers, deleteCustomer } from "@/lib/data";
+import { addCustomer, deleteCustomer } from "@/lib/actions";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,31 +62,33 @@ export function CustomerListClient({
   const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
   const router = useRouter();
   const { toast } = useToast();
-
-  const refreshCustomers = () => {
-    setCustomers(getCustomers());
-  };
+  const [isPending, startTransition] = useTransition();
 
   const handleAddCustomer = (newCustomerData: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>) => {
-    addCustomer(newCustomerData);
-    refreshCustomers(); 
+    startTransition(async () => {
+      const newCustomer = await addCustomer(newCustomerData);
+      setCustomers(prev => [...prev, newCustomer]);
+      toast({ title: "Success", description: "Customer added." });
+    });
   };
 
   const handleDeleteCustomer = () => {
     if (customerToDelete) {
-      try {
-        deleteCustomer(customerToDelete.id);
-        refreshCustomers();
-        toast({ title: "Success", description: "Customer deleted." });
-      } catch (error) {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Failed to delete customer.",
-        });
-      } finally {
-        setCustomerToDelete(null);
-      }
+      startTransition(async () => {
+        try {
+          await deleteCustomer(customerToDelete.id);
+          setCustomers(prev => prev.filter(c => c.id !== customerToDelete.id));
+          toast({ title: "Success", description: "Customer deleted." });
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Failed to delete customer.",
+          });
+        } finally {
+          setCustomerToDelete(null);
+        }
+      });
     }
   };
   
@@ -161,7 +163,7 @@ export function CustomerListClient({
               <TableBody>
                 {filteredCustomers.length > 0 ? (
                   filteredCustomers.map((customer) => (
-                    <TableRow key={customer.id}>
+                    <TableRow key={customer.id} className={isPending ? 'opacity-50' : ''}>
                       <TableCell>
                         <Link href={`/customers/${customer.id}`}>
                           <div className="flex items-center gap-3 hover:underline">

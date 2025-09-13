@@ -175,7 +175,10 @@ const initialData: DbData = {
   ]
 };
 
-const readDb = (): DbData => {
+// These functions are server-only and should not be imported into client components.
+// They are safe to use in Server Components and Server Actions.
+
+export const readDb = (): DbData => {
   try {
     if (fs.existsSync(dbPath)) {
       const fileContent = fs.readFileSync(dbPath, 'utf-8');
@@ -190,7 +193,7 @@ const readDb = (): DbData => {
   }
 };
 
-const writeDb = (data: DbData) => {
+export const writeDb = (data: DbData) => {
   try {
     fs.writeFileSync(dbPath, JSON.stringify(data, null, 2));
   } catch (error) {
@@ -198,133 +201,25 @@ const writeDb = (data: DbData) => {
   }
 };
 
-let DB = readDb();
-
-
-const recalculateBalances = (customerId: string) => {
-  const customerTransactions = DB.transactions
-    .filter(t => t.customerId === customerId)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  let currentBalance = 0;
-  customerTransactions.forEach(tx => {
-    const amount = tx.type === 'sale' ? tx.amount : -tx.amount;
-    currentBalance += amount;
-    tx.balanceAfter = currentBalance;
-  });
-
-  const customer = DB.customers.find(c => c.id === customerId);
-  if (customer) {
-    customer.outstandingBalance = currentBalance;
-  }
-  writeDb(DB);
-};
-
-
-// Functions to interact with the in-memory DB
-// This ensures that components always get the latest data.
-
 export const getCustomers = (): Customer[] => {
-  DB = readDb();
-  return JSON.parse(JSON.stringify(DB.customers));
+  const db = readDb();
+  return JSON.parse(JSON.stringify(db.customers));
 };
 
 export const getCustomerById = (id: string): Customer | undefined => {
-  DB = readDb();
-  const customer = DB.customers.find((c) => c.id === id);
+  const db = readDb();
+  const customer = db.customers.find((c) => c.id === id);
   return customer ? JSON.parse(JSON.stringify(customer)) : undefined;
 };
 
-export const addCustomer = (customer: Omit<Customer, 'id' | 'createdAt' | 'outstandingBalance'>): Customer => {
-  DB = readDb();
-  const newCustomer: Customer = {
-    ...customer,
-    id: `CUST-${Date.now()}`,
-    outstandingBalance: 0,
-    createdAt: new Date().toISOString(),
-  };
-  DB.customers.push(newCustomer);
-  writeDb(DB);
-  return JSON.parse(JSON.stringify(newCustomer));
-};
-
-export const updateCustomer = (updatedCustomer: Omit<Customer, 'outstandingBalance' | 'createdAt'>): Customer => {
-  DB = readDb();
-  const index = DB.customers.findIndex(c => c.id === updatedCustomer.id);
-  if (index !== -1) {
-    DB.customers[index] = { ...DB.customers[index], ...updatedCustomer };
-    writeDb(DB);
-    return JSON.parse(JSON.stringify(DB.customers[index]));
-  }
-  throw new Error("Customer not found");
-};
-
-export const deleteCustomer = (id: string): void => {
-  DB = readDb();
-  const index = DB.customers.findIndex(c => c.id === id);
-  if (index !== -1) {
-    DB.customers.splice(index, 1);
-    DB.transactions = DB.transactions.filter(t => t.customerId !== id);
-    writeDb(DB);
-  } else {
-    throw new Error("Customer not found");
-  }
-};
-
-
 export const getTransactions = (): Transaction[] => {
-  DB = readDb();
-  return JSON.parse(JSON.stringify(DB.transactions));
+  const db = readDb();
+  return JSON.parse(JSON.stringify(db.transactions));
 };
 
 export const getTransactionsByCustomerId = (customerId: string): Transaction[] => {
-  DB = readDb();
-  return DB.transactions
+  const db = readDb();
+  return db.transactions
     .filter((t) => t.customerId === customerId)
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
-
-export const addTransaction = (transaction: Omit<Transaction, 'id' | 'balanceAfter' | 'status'>): Transaction => {
-  DB = readDb();
-  const newTransaction: Transaction = {
-    ...transaction,
-    id: `TXN-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-    balanceAfter: 0, // Will be recalculated
-    dueDate: transaction.type === 'sale' ? new Date(new Date(transaction.date).getTime() + (transaction.creditDays || 0) * 24 * 60 * 60 * 1000).toISOString() : null,
-    status: transaction.type === 'payment' ? 'paid' : 'due',
-  };
-  
-  DB.transactions.push(newTransaction);
-  recalculateBalances(transaction.customerId); // this also writes to DB
-  
-  const finalTransaction = DB.transactions.find(t => t.id === newTransaction.id)!;
-  return JSON.parse(JSON.stringify(finalTransaction));
-}
-
-export const updateTransaction = (updatedTransaction: Omit<Transaction, 'balanceAfter'>): Transaction => {
-  DB = readDb();
-  const index = DB.transactions.findIndex(t => t.id === updatedTransaction.id);
-  if (index !== -1) {
-     DB.transactions[index] = {
-      ...DB.transactions[index],
-      ...updatedTransaction,
-      dueDate: updatedTransaction.type === 'sale' ? new Date(new Date(updatedTransaction.date).getTime() + (updatedTransaction.creditDays || 0) * 24 * 60 * 60 * 1000).toISOString() : null,
-     };
-     recalculateBalances(updatedTransaction.customerId); // this also writes to DB
-     const finalTransaction = DB.transactions.find(t => t.id === updatedTransaction.id)!;
-     return JSON.parse(JSON.stringify(finalTransaction));
-  }
-  throw new Error("Transaction not found");
-}
-
-export const deleteTransaction = (id: string): void => {
-  DB = readDb();
-  const index = DB.transactions.findIndex(t => t.id === id);
-  if (index !== -1) {
-    const customerId = DB.transactions[index].customerId;
-    DB.transactions.splice(index, 1);
-    recalculateBalances(customerId); // this also writes to DB
-  } else {
-    throw new Error("Transaction not found");
-  }
-}
