@@ -50,6 +50,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { EditTransactionSheet } from "./edit-transaction-sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatLedgerDate } from "@/lib/date";
 
 interface CustomerLedgerClientProps {
   customer: Customer;
@@ -129,14 +130,6 @@ export function CustomerLedgerClient({
       currency: "NPR",
       minimumFractionDigits: 2,
     }).format(amount);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-GB", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-    });
   };
 
   const isOverdue = (transaction: Transaction) =>
@@ -221,11 +214,14 @@ export function CustomerLedgerClient({
                       </TableRow>
                     ))
                   ) : transactions.length > 0 ? (
-                    transactions.map((tx) => (
+                    transactions.map((tx) => {
+                      const { englishDate, nepaliDate } = formatLedgerDate(tx.date);
+                      return (
                       <TableRow key={tx.id}>
                         <TableCell>
                            <div className="font-medium truncate max-w-[140px] sm:max-w-xs">{tx.description}</div>
-                           <div className="text-sm text-muted-foreground">{formatDate(tx.date)}</div>
+                           <div className="text-sm text-muted-foreground">{englishDate}</div>
+                           <div className="text-xs text-muted-foreground">{nepaliDate}</div>
                            {isOverdue(tx) && <Badge variant="destructive" className="mt-1">Overdue</Badge>}
                         </TableCell>
                         <TableCell className="text-right">
@@ -254,7 +250,7 @@ export function CustomerLedgerClient({
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    ))
+                    )})
                   ) : (
                     <TableRow>
                       <TableCell colSpan={4} className="h-24 text-center">
