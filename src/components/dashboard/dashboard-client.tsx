@@ -126,7 +126,7 @@ export function DashboardClient({
         </div>
         
         {chartData.length > 0 && (
-          <Card>
+          <Card className="hidden md:block">
             <CardHeader>
               <CardTitle>Top 5 Outstanding Balances</CardTitle>
               <CardDescription>
