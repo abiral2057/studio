@@ -187,12 +187,10 @@ export function CustomerLedgerClient({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead className="text-right">Debit</TableHead>
-                    <TableHead className="text-right">Credit</TableHead>
+                    <TableHead>Details</TableHead>
+                    <TableHead className="text-right">Amount</TableHead>
                     <TableHead className="text-right hidden md:table-cell">Balance</TableHead>
-                     <TableHead className="text-right"> </TableHead>
+                     <TableHead className="w-[50px] text-right"> </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -200,19 +198,14 @@ export function CustomerLedgerClient({
                     transactions.map((tx) => (
                       <TableRow key={tx.id}>
                         <TableCell>
-                          <div className="font-medium">{formatDate(tx.date)}</div>
-                          {isOverdue(tx) && <Badge variant="destructive">Overdue</Badge>}
+                           <div className="font-medium truncate max-w-[150px] sm:max-w-xs">{tx.description}</div>
+                           <div className="text-sm text-muted-foreground">{formatDate(tx.date)}</div>
+                           {isOverdue(tx) && <Badge variant="destructive" className="mt-1">Overdue</Badge>}
                         </TableCell>
-                        <TableCell>
-                          <p className="truncate max-w-xs">{tx.description}</p>
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-destructive">
-                          {tx.type === "sale" ? formatCurrency(tx.amount) : "-"}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-green-600">
-                          {tx.type === "payment"
-                            ? formatCurrency(tx.amount)
-                            : "-"}
+                        <TableCell className="text-right">
+                           <div className={`font-mono font-semibold ${tx.type === 'sale' ? 'text-destructive' : 'text-green-600'}`}>
+                            {formatCurrency(tx.amount)}
+                          </div>
                         </TableCell>
                         <TableCell className="text-right font-mono hidden md:table-cell">
                           {formatCurrency(tx.balanceAfter)}
@@ -238,7 +231,7 @@ export function CustomerLedgerClient({
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="h-24 text-center">
+                      <TableCell colSpan={4} className="h-24 text-center">
                         No transactions yet.
                       </TableCell>
                     </TableRow>

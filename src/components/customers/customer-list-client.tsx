@@ -157,7 +157,7 @@ export function CustomerListClient({
                   <TableHead>Name</TableHead>
                   <TableHead className="hidden md:table-cell">Phone</TableHead>
                   <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-[80px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -196,9 +196,9 @@ export function CustomerListClient({
                              <DropdownMenuItem onSelect={() => router.push(`/customers/${customer.id}`)}>
                               <ArrowRight className="mr-2 h-4 w-4" /> View Ledger
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => setCustomerToDelete(customer)}>
-                              <Trash2 className="mr-2 h-4 w-4 text-destructive" />
-                              <span className="text-destructive">Delete Customer</span>
+                            <DropdownMenuItem className="text-destructive" onSelect={() => setCustomerToDelete(customer)}>
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              <span>Delete Customer</span>
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -207,7 +207,7 @@ export function CustomerListClient({
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} className="h-24 text-center">
+                    <TableCell colSpan={5} className="h-24 text-center">
                       No customers found.
                     </TableCell>
                   </TableRow>
