@@ -80,3 +80,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  @media (max-width: 767px) {
+    .mobile-table-container {
+      @apply w-full overflow-x-auto;
+    }
+  }
+}

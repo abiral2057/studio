@@ -158,7 +158,7 @@ export function CustomerListClient({
             </div>
           </CardHeader>
           <CardContent>
-            <div className={`${isPending ? 'opacity-50' : ''} overflow-x-auto`}>
+            <div className={`${isPending ? 'opacity-50' : ''} mobile-table-container`}>
               <Table>
                 <TableHeader>
                   <TableRow>

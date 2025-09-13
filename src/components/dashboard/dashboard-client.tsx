@@ -180,7 +180,7 @@ export function DashboardClient({
             <CardDescription>A list of customers with pending payments.</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
+            <div className="mobile-table-container">
               <Table>
                 <TableHeader>
                   <TableRow>
