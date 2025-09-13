@@ -123,7 +123,7 @@ export function SettingsClient({ user }: SettingsClientProps) {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
   }
 
-  const usagePercentage = storage ? (storage.usage / storage.quota) * 100 : 0;
+  const usagePercentage = storage && storage.quota > 0 ? (storage.usage / storage.quota) * 100 : 0;
 
   return (
     <div className="flex-1 p-2 sm:p-4 md:p-6">
