@@ -183,6 +183,7 @@ export function AddCustomerSheet({
                 </FormItem>
               )}
             />
+            <div className="flex-grow" />
             <SheetFooter className="mt-auto pt-4">
               <Button type="submit" className="w-full" disabled={isPending}>
                 {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
