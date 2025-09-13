@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -49,6 +49,7 @@ export function AddCustomerSheet({
   onAddCustomer,
 }: AddCustomerSheetProps) {
   const [isPending, startTransition] = useTransition();
+  const [generatedCustomerId, setGeneratedCustomerId] = useState('');
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -58,16 +59,25 @@ export function AddCustomerSheet({
       address: "",
       creditLimit: 0,
       defaultCreditDays: 0,
+      customerId: '',
     },
   });
 
-  // Effect to set customerId only once on mount
-  React.useEffect(() => {
-    form.reset({
-      ...form.getValues(),
-       customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`
-    });
-  }, [form, isOpen]);
+  useEffect(() => {
+    // Generate customerId on the client to avoid hydration mismatch
+    const newCustomerId = `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`;
+    setGeneratedCustomerId(newCustomerId);
+    if(isOpen) {
+      form.reset({
+        name: "",
+        phone: "",
+        address: "",
+        creditLimit: 0,
+        defaultCreditDays: 0,
+        customerId: newCustomerId,
+      });
+    }
+  }, [isOpen, form]);
 
 
   const onSubmit = (values: FormValues) => {
@@ -85,19 +95,7 @@ export function AddCustomerSheet({
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        form.reset({
-          name: "",
-          phone: "",
-          address: "",
-          creditLimit: 0,
-          defaultCreditDays: 0,
-          customerId: `CUST-${Math.random().toString(36).substr(2, 5).toUpperCase()}`,
-        });
-      }
-      setIsOpen(open);
-    }}>
+    <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent className="flex flex-col">
         <SheetHeader>
           <SheetTitle>Add New Customer</SheetTitle>
