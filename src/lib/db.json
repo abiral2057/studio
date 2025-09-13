@@ -12,28 +12,6 @@
       "createdAt": "2023-01-15T10:00:00Z"
     },
     {
-      "id": "2",
-      "customerId": "CUST-002",
-      "name": "Bina Rai",
-      "phone": "9876543211",
-      "address": "456 Market Rd, Pokhara",
-      "creditLimit": 25000,
-      "outstandingBalance": -5000,
-      "defaultCreditDays": 15,
-      "createdAt": "2023-02-20T11:30:00Z"
-    },
-    {
-      "id": "3",
-      "customerId": "CUST-003",
-      "name": "Chandan Gupta",
-      "phone": "9876543212",
-      "address": "789 Temple Ave, Lalitpur",
-      "creditLimit": 100000,
-      "outstandingBalance": 75000,
-      "defaultCreditDays": 45,
-      "createdAt": "2023-03-10T09:00:00Z"
-    },
-    {
       "id": "4",
       "customerId": "CUST-004",
       "name": "Dolma Sherpa",
@@ -52,7 +30,7 @@
       "creditLimit": 0,
       "defaultCreditDays": 0,
       "id": "CUST-1757767992447",
-      "outstandingBalance": 0,
+      "outstandingBalance": 2000,
       "createdAt": "2025-09-13T12:53:12.447Z"
     }
   ],
@@ -94,54 +72,6 @@
       "status": "paid"
     },
     {
-      "id": "t4",
-      "customerId": "2",
-      "date": "2023-11-01T14:00:00Z",
-      "type": "sale",
-      "amount": 5000,
-      "description": "Handicrafts order",
-      "creditDays": 15,
-      "dueDate": "2023-11-16T14:00:00Z",
-      "balanceAfter": 5000,
-      "status": "due"
-    },
-    {
-      "id": "t5",
-      "customerId": "2",
-      "date": "2023-11-10T11:00:00Z",
-      "type": "payment",
-      "amount": 10000,
-      "description": "Advance for next order",
-      "creditDays": null,
-      "dueDate": null,
-      "balanceAfter": -5000,
-      "status": "paid"
-    },
-    {
-      "id": "t6",
-      "customerId": "3",
-      "date": "2024-05-01T10:00:00Z",
-      "type": "sale",
-      "amount": 50000,
-      "description": "Electronics parts",
-      "creditDays": 45,
-      "dueDate": "2025-09-28T12:48:55.290Z",
-      "balanceAfter": 50000,
-      "status": "due"
-    },
-    {
-      "id": "t7",
-      "customerId": "3",
-      "date": "2024-05-20T15:00:00Z",
-      "type": "sale",
-      "amount": 25000,
-      "description": "Additional components",
-      "creditDays": 45,
-      "dueDate": "2025-10-13T12:48:55.290Z",
-      "balanceAfter": 75000,
-      "status": "due"
-    },
-    {
       "customerId": "CUST-1757767992447",
       "date": "2025-09-13T12:53:19.864Z",
       "type": "sale",
@@ -164,6 +94,18 @@
       "balanceAfter": 0,
       "dueDate": null,
       "status": "paid"
+    },
+    {
+      "customerId": "CUST-1757767992447",
+      "date": "2025-09-13T18:15:00.000Z",
+      "type": "sale",
+      "amount": 2000,
+      "description": "Mm",
+      "creditDays": 10,
+      "id": "TXN-1757779959651-dueyp",
+      "balanceAfter": 2000,
+      "dueDate": "2025-09-23T18:15:00.000Z",
+      "status": "due"
     }
   ]
 }

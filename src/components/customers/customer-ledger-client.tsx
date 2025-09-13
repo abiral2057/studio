@@ -285,7 +285,7 @@ export function CustomerLedgerClient({
           isOpen={isEditSheetOpen}
           setIsOpen={setIsEditSheetOpen}
           customer={customer}
-          transaction={transactionToedit}
+          transaction={transactionToEdit}
           onEditTransaction={handleEditTransaction}
         />
       )}
@@ -299,7 +299,10 @@ export function CustomerLedgerClient({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteTransaction} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteTransaction} className="bg-destructive hover:bg-destructive/90" disabled={isPending}>
+              {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Delete
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
