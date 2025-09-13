@@ -2,7 +2,7 @@ import { CustomerLedgerClient } from "@/components/customers/customer-ledger-cli
 import { getCustomerById, getTransactionsByCustomerId } from "@/lib/data";
 import { notFound } from "next/navigation";
 
-export default function CustomerLedgerPage({
+export default async function CustomerLedgerPage({
   params,
 }: {
   params: { id: string };
